@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-i int = 0;
+var i int = 0 
 
 func plus(){
 	for j := 0; j < 10; j++ {
@@ -20,5 +20,8 @@ func minus(){
 }
 
 func main(){
+	go plus()
+	go minus()
 	time.Sleep(100*time.Millisecond)
+	fmt.Println(i)
 }
