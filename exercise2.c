@@ -4,20 +4,26 @@
 #include <string.h>
 
 
+pthread_mutex_t lock;
+
 int i = 0;
 
 void* func1(){
+	pthread_mutex_lock(&lock);
 	int j;
 	for (j = 0; j<1000000;j++){
 		i++;
-	} 
+	}
+	 pthread_mutex_unlock(&lock);
 }
 
 void* func2(){
+	pthread_mutex_lock(&lock);
 	int j;
 	for (j = 0; j<1000000;j++){
 		i--;
-	} 
+	}
+	pthread_mutex_unlock(&lock);
 }
 
 int main(void){
@@ -29,6 +35,7 @@ int main(void){
 
 	pthread_join(hilo1,NULL);
 	pthread_join(hilo2, NULL);
+	pthread_mutex_destroy(&lock);
 
 	printf("the main thread finished");
 	printf("%d",i);
