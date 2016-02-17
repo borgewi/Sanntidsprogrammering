@@ -76,3 +76,7 @@ func main() {
 
     //udpBroadcast( "129.241.187.255:30007" , activationTime )
 }
+
+//ch <- v    // Send v to channel ch.
+//v := <-ch  // Receive from ch, and
+//           // assign value to v.
