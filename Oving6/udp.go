@@ -25,7 +25,7 @@ func ListenToBroadcast(fromPort string, receiveCh, timeoutCh chan int) {
 
 	var count int64
 
-mainloop:
+	//mainloop:
 	for {
 		buffer := make([]byte, 64)
 		ServerConnection.SetDeadline(time.Now().Add(1000 * time.Millisecond))
@@ -35,7 +35,7 @@ mainloop:
 
 		if err != nil {
 			timeoutCh <- 1
-			break mainloop
+			break //mainloop
 		}
 
 		receiveCh <- int(count)
