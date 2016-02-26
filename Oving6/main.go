@@ -14,9 +14,9 @@ func CheckError(err error) {
 	}
 }
 
-func ListenToBroadcast(fromPort string, receiveCh, timeoutCh chan int) {
+func ListenToBroadcast(listenAddress string, receiveCh, timeoutCh chan int) {
 
-	ServerAddress, err := net.ResolveUDPAddr("udp", ":"+fromPort)
+	ServerAddress, err := net.ResolveUDPAddr("udp", listenAddress)
 	CheckError(err)
 
 	ServerConnection, err := net.ListenUDP("udp", ServerAddress)
@@ -26,22 +26,25 @@ func ListenToBroadcast(fromPort string, receiveCh, timeoutCh chan int) {
 
 	var count int64
 
-	//mainloop:
+	mainloop:
 	for {
 		buffer := make([]byte, 64)
-		ServerConnection.SetDeadline(time.Now().Add(1000 * time.Millisecond))
-		n, _, err := ServerConnection.ReadFromUDP(buffer)
-		CheckError(err)
-		count, _ = binary.Varint(buffer[0:n])
+		ServerConnection.SetDeadline(time.Now().Add(3000 * time.Millisecond))
+			n, _, err := ServerConnection.ReadFromUDP(buffer)
+			CheckError(err)
+			count, _ = binary.Varint(buffer[0:n])
+			c := int(count)
+			receiveCh <- c
 
-		if err != nil {
-			timeoutCh <- 1
-			break //mainloop
-		}
+			if err != nil {
+				timeoutCh <- 1
+				break mainloop
+			}
 
-		receiveCh <- int(count)
+			
 	}
 }
+
 
 func UdpBroadcast(toAdress string, countCh chan int) {
 	ServerAddress, err := net.ResolveUDPAddr("udp", toAdress)
@@ -60,7 +63,7 @@ func UdpBroadcast(toAdress string, countCh chan int) {
 			_, err := Connection.Write(buffer)
 			CheckError(err)
 
-			time.Sleep(time.Millisecond * 100)
+			//time.Sleep(time.Millisecond * 1000)
 		default:
 
 		}
@@ -72,31 +75,33 @@ func Backup() {
 	timeoutCh := make(chan int)
 	countCh := make(chan int)
 	latestValue := 0
-	localAddr := "129.241.187.161"
-	port := "25000"
+	var p *int = &latestValue
+	localAddr := "129.241.187.255" + ":13337"
 
-	go ListenToBroadcast(port, receiveCh, timeoutCh)
+	go ListenToBroadcast(localAddr, receiveCh, timeoutCh)
 
 	for {
 		select {
 		case count := <-receiveCh: //Finnes allerede en primal som kjører
-			if latestValue > 0 {
-				latestValue = count
+			if count>0{
+				*p = count
 			}
 		case <-timeoutCh: //Finner ikke primal, start backup og counter
-			go Counter(countCh, latestValue)
+			go Counter(countCh, *p)
 			go UdpBroadcast(localAddr, countCh)
-			exec.Command("gnome-terminal", "-x", "sh", "-c", "go run main.go")
-			fmt.Println(latestValue)
+			callBackup := exec.Command("gnome-terminal", "-x",  "sh", "-c", "go run main.go")
+			callBackup.Run()
+			break
 		}
 	}
 }
 
 func Counter(countCh chan int, latestValue int) {
 	for {
+		fmt.Println(latestValue)
 		latestValue++
 		countCh <- latestValue
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 	}
 }
 
