@@ -2,6 +2,7 @@
 
 #include "io.h"
 #include "channels.h"
+#include <stdio.h>
 
 
 static comedi_t *it_g = NULL;
@@ -39,6 +40,7 @@ void io_clear_bit(int channel) {
 
 void io_write_analog(int channel, int value) {
     comedi_data_write(it_g, channel >> 8, channel & 0xff, 0, AREF_GROUND, value);
+    printf("C: %d, V: %d", channel,value);
 }
 
 
