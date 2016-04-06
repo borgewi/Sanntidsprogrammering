@@ -4,28 +4,19 @@ import (
 	"time"
 )
 
-func get_wall_time() float{
-    struct timeval time
-    gettimeofday(&time, NULL)
-    return (double)time.tv_sec + (double)time.tv_usec * .000001
-}
-
 
 var timerEndTime time.time
 var timerActive bool
 
 func timer_start(duration float){
-    timerEndTime    = time.now() + duration;
-    timerActive     = 1;
+    timerEndTime    = time.now().Add(duration* time.second)
+    timerActive     = true
 }
 
 func timer_stop(){
-    timerActive = 0
+    timerActive = false
 }
 
-func timer_timedOut() int{
-    return (timerActive  &&  get_wall_time() > timerEndTime)
+func timer_timedOut() bool{
+    return (timerActive  &&  time.now().After(timerEndTime))
 }
-
-
-
