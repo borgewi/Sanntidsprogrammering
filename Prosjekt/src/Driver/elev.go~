@@ -46,17 +46,17 @@ func ElevInit() {
 
 	for floor := 0; floor < NUMFLOORS; floor++ {
 		for button := 0; button < 3; button++ {
-			ElevSetButtonLight(button, floor, false)
+			ElevSetButtonLight(button, floor, 0)
 		}
 	}
 	ElevSetFloorIndicator(0)
-	ElevSetDoorLight(false)
+	ElevSetDoorLight(0)
 }
 
-func ElevSetButtonLight(button int, floor int, value bool) { //We want assert?
+func ElevSetButtonLight(button int, floor int, value int) { //We want assert?
 	if floor >= 0 && floor < NUMFLOORS {
 		if button >= 0 && button < 3 {
-			if value == true {
+			if value > 0 {
 				io_set_bit(lightChannels[floor][button])
 			} else {
 				io_clear_bit(lightChannels[floor][button])
@@ -84,8 +84,8 @@ func ElevSetFloorIndicator(floor int) {
 	}
 }
 
-func ElevSetDoorLight(value bool) {
-	if value == true {
+func ElevSetDoorLight(value int) {
+	if value > 0 {
 		io_set_bit(LIGHT_DOOR_OPEN)
 	} else {
 		io_clear_bit(LIGHT_DOOR_OPEN)
@@ -96,6 +96,7 @@ func ElevGetButtonSignal(button int, floor int) int { //We want assert?
 	if floor >= 0 && floor < NUMFLOORS {
 		if button >= 0 && button < 3 {
 			if io_read_bit(buttonChannels[floor][button]) > 0 {
+				fmt.Println("yo")
 				return 1
 			} else {
 				return 0

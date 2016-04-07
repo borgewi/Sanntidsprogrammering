@@ -1,53 +1,36 @@
-package elev_algo
+package Elev_algo
 
-include(
-    "requests"
-    "timer"
+import(
+    "time"
     "Driver"
+    //"fmt"
 )
 
-
-// #include "con_load.h"
-// #include "elevator_io_device.h"
-
-
-static Elevator             elevator;
-static ElevOutputDevice     outputDevice;
-
-
-// static void __attribute__((constructor)) fsm_init(){
-//     elevator = elevator_uninitialized();
-    
-//     con_load("elevator.con",
-//         con_val("doorOpenDuration_s", &elevator.config.doorOpenDuration_s, "%lf")
-//         con_enum("clearRequestVariant", &elevator.config.clearRequestVariant,
-//             con_match(CV_All)
-//             con_match(CV_InDirn)
-//         )
-//     )
-    
-//     outputDevice = elevio_getOutputDevice();
-// }
+var (
+    elevator Elevator
+)
 
 func setAllLights(e Elevator){
-    for(floor := 0; floor < N_FLOORS; floor++){
-        for(btn := 0; btn < N_BUTTONS; btn++){
-            outputDevice.requestButtonLight(floor, btn, e.Requests[floor][btn])
+    for floor := 0; floor < Driver.NUMFLOORS; floor++{
+        for btn := 0; btn < Driver.NUMBUTTONS; btn++{
+            Driver.ElevSetButtonLight(btn, floor, e.Requests[floor][btn])
         }
     }
 }
 
 func fsm_onInitBetweenFloors(){
-    outputDevice.motorDirection = D_Down
+    Driver.ElevSetMotorDirection(int(D_Down))
     elevator.Dir = D_Down
     elevator.Behaviour = EB_Moving
+    for Driver.ElevGetFloorSensorSignal() == -1{}
+    Driver.ElevSetMotorDirection(int(D_Idle))
 }
 
 func fsm_onRequestButtonPress(btn_floor int, btn_type Button){
     switch(elevator.Behaviour){
     case EB_DoorOpen:
         if(elevator.Floor == btn_floor){
-            timer_start(elevator.config.doorOpenDuration_s)
+            timer_start(3000 * time.Millisecond)
         } else {
             elevator.Requests[btn_floor][btn_type] = true
         }
@@ -59,14 +42,14 @@ func fsm_onRequestButtonPress(btn_floor int, btn_type Button){
         elevator.Requests[btn_floor][btn_type] = true
         elevator.Dir = requests_chooseDirection(elevator)
         if(elevator.Dir == D_Idle){
-            outputDevice.doorLight(true)
+            Driver.ElevSetDoorLight(true)
             elevator = requests_clearAtCurrentFloor(elevator)
-            timer_start(elevator.config.doorOpenDuration_s)
+            timer_start(3000 * time.Millisecond)
             elevator.Behaviour = EB_DoorOpen
         } else {
-            outputDevice.motorDirection(elevator.Dir)
+            Driver.ElevSetMotorDirection(int(elevator.Dir))
             elevator.Behaviour = EB_Moving
-        }    
+        }
         break
     }
     
@@ -76,14 +59,14 @@ func fsm_onRequestButtonPress(btn_floor int, btn_type Button){
 
 func fsm_onFloorArrival(newFloor int){
     elevator.Floor = newFloor
-    outputDevice.floorIndicator(elevator.Floor)
+    Driver.ElevSetFloorIndicator(newFloor)
     switch(elevator.Behaviour){
     case EB_Moving:
         if(requests_shouldStop(elevator)){
-            outputDevice.motorDirection(D_Idle)
-            outputDevice.doorLight(true)
+            Driver.ElevSetMotorDirection(int(D_Idle))
+            Driver.ElevSetDoorLight(true)
             elevator = requests_clearAtCurrentFloor(elevator)
-            timer_start(elevator.config.doorOpenDuration_s)
+            timer_start(3000 * time.Millisecond)
             setAllLights(elevator)
             elevator.Behaviour = EB_DoorOpen
         }
@@ -98,8 +81,8 @@ func fsm_onDoorTimeout(){
     switch(elevator.Behaviour){
     case EB_DoorOpen:
         elevator.Dir = requests_chooseDirection(elevator)
-        outputDevice.doorLight(true)
-        outputDevice.motorDirection(elevator.Dir)
+        Driver.ElevSetMotorDirection(int(elevator.Dir))
+        Driver.ElevSetDoorLight(false)
         if(elevator.Dir == D_Idle){
             elevator.Behaviour = EB_Idle
         } else {
@@ -108,5 +91,16 @@ func fsm_onDoorTimeout(){
         break
     default:
         break
+    }
+}
+
+func elevator_uninitialized() {
+    elevator.Dir = D_Idle
+    elevator.Behaviour = EB_Idle
+    elevator.Floor = Driver.ElevGetFloorSensorSignal()
+    for f := 0; f < Driver.NUMFLOORS; f++{
+        for b := 0; b < Driver.NUMBUTTONS; b++{
+            elevator.Requests[f][b] = false
+        }
     }
 }

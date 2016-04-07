@@ -4,7 +4,6 @@ package main
 import (
 	//"encoding/binary"
 	"fmt"
-    "Elev_algo"
 	//"net"
 	//"os/exec"
 	//"time"
@@ -21,13 +20,12 @@ const(
 
 
 func main() {
+	fmt.Println(BUTTON_DOWN)
 	Driver.ElevInit()
-	//error := 0
-    Elev_algo.Merry_go_around()
-
-	//for error < 1{
-	//	check_buttons()
-	//}
+	error := 0
+	for error < 1{
+		check_buttons()
+	}
 }
 
 func button_pressed(floor int,button int) {

@@ -22,7 +22,7 @@ func io_clear_bit(channel int) {
 
 
 func io_write_analog(channel int, value int) {
-    C.io_write_analog(C.int(channel),C.int(channel))
+    C.io_write_analog(C.int(channel),C.int(value))
 }
 
 
