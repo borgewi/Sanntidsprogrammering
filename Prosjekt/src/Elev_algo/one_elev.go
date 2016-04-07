@@ -7,13 +7,16 @@ import(
 )
 
 
-func Merry_go_around(){
+func Merry_go_around(recieveCh chan []byte){
+    //var elevator2 Elevator
+    
+
     //Init elev_state
     if(Driver.ElevGetFloorSensorSignal() == -1){
         fsm_onInitBetweenFloors()
     }
     elevator_uninitialized()
-
+    go send_status(recieveCh)
     running := true
     var prev_button [Driver.NUMFLOORS][Driver.NUMBUTTONS] int
     var prev_floor int

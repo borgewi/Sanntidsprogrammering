@@ -11,6 +11,7 @@ import (
 	"Driver"
 )
 
+
 const(
     NUMBUTTONS int = 3
     NUMFLOORS int = 4
@@ -21,14 +22,36 @@ const(
 
 
 func main() {
-	Driver.ElevInit()
-	//error := 0
-    Elev_algo.Merry_go_around()
+    receiveCh := make(chan []byte)
+    //timeoutCh := make(chan int)
 
-	//for error < 1{
-	//	check_buttons()
-	//}
+	Driver.ElevInit()
+    go Elev_algo.Merry_go_around(receiveCh)
+    go get_status_and_broadcast(receiveCh)
+    for{}
 }
+
+
+func get_status_and_broadcast(receiveCh chan []byte){
+    var data []byte
+    var elev Elev_algo.Elevator
+    for{
+        data = <-receiveCh
+        json.Unmarshal(data, &elev)
+        fmt.Printf("%+v", elev)
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
 
 func button_pressed(floor int,button int) {
 	Driver.ElevSetMotorDirection(1)

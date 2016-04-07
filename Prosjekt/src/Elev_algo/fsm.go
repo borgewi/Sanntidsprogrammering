@@ -4,6 +4,7 @@ import(
     "time"
     "Driver"
     //"fmt"
+    "encoding/json"
 )
 
 var (
@@ -102,5 +103,14 @@ func elevator_uninitialized() {
         for b := 0; b < Driver.NUMBUTTONS; b++{
             elevator.Requests[f][b] = false
         }
+    }
+}
+
+func send_status(recieveCh chan []byte){
+    for{
+        time.Sleep(2000*time.Millisecond)
+        var data []byte
+        data = json.Marshal(elevator)
+        recieveCh <- data
     }
 }
