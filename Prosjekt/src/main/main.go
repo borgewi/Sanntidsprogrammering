@@ -19,19 +19,19 @@ const (
 )
 
 func main() {
-	receiveCh := make(chan Elev_algo.Elevator)
+	receiveCh := make(chan Elev_control.Elevator)
 	//timeoutCh := make(chan int)
 
 	Driver.ElevInit()
-	go Elev_algo.Merry_go_around(receiveCh)
+	go Elev_control.Merry_go_around(receiveCh)
 	go get_status_and_broadcast(receiveCh)
 	for {
 	}
 }
 
-func get_status_and_broadcast(receiveCh chan Elev_algo.Elevator) {
+func get_status_and_broadcast(receiveCh chan Elev_control.Elevator) {
 	//var data []byte
-	var elev Elev_algo.Elevator
+	var elev Elev_control.Elevator
 	for {
 		elev = <-receiveCh
 		//json.Unmarshal(data, &elev)

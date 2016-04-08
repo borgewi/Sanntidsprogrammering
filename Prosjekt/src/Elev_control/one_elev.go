@@ -1,4 +1,4 @@
-package Elev_algo
+package Elev_control
 
 import (
 	"Driver"
