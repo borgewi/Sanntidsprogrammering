@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func Merry_go_around(recieveCh chan Elevator) {
+func Run_Elevator(recieveCh chan Elevator) {
 	//var elevator2 Elevator
 
 	//Init elev_state

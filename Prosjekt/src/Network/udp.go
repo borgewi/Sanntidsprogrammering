@@ -15,7 +15,7 @@ func CheckError(err error) {
 }
 
 func ListenToBroadcast(listenAddress string, receiveCh chan Elev_control.Elevator, timeoutCh chan int) {
-
+	fmt.Println("Running ListenToBroadcast")
 	ServerAddress, err := net.ResolveUDPAddr("udp", listenAddress)
 	CheckError(err)
 
@@ -26,19 +26,19 @@ func ListenToBroadcast(listenAddress string, receiveCh chan Elev_control.Elevato
 
 	var elev Elev_control.Elevator
 
-mainloop:
+	mainloop:
 	for {
-		buffer := make([]byte, 64)
+		buffer := make([]byte, 1024)
 		ServerConnection.SetDeadline(time.Now().Add(3000 * time.Millisecond))
 		_, _, err := ServerConnection.ReadFromUDP(buffer)
 		CheckError(err)
 		err = json.Unmarshal(buffer, &elev)
 		CheckError(err)
-		receiveCh <- elev
 		if err != nil {
 			timeoutCh <- 1
 			break mainloop
 		}
+		receiveCh <- elev
 	}
 }
 
@@ -50,8 +50,8 @@ func UdpBroadcast(toAdress string, elev Elev_control.Elevator) {
 	CheckError(err)
 
 	defer Connection.Close() //Closes the connection after udpBroadcast functioncall
-	buffer := make([]byte, 64)
-	buffer, err = json.Marshal(elev)
+	//buffer := make([]byte, 1024)
+	buffer, err := json.Marshal(elev)
 	_, err = Connection.Write(buffer)
 	CheckError(err)
 	//time.Sleep(time.Millisecond * 1000)
