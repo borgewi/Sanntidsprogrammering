@@ -1,29 +1,32 @@
 package Network
+
 import (
 	"Elev_control"
 	"fmt"
 )
 
-
-
-func Get_status_and_broadcast(receiveCh chan Elev_control.Elevator) {
-	//var data []byte
+func Get_status_and_broadcast(sendCh chan UdpMessage, statusCh chan Elev_control.Elevator) {
 	var elev Elev_control.Elevator
-	toAdress := "129.241.187.143" + ":13337"
+	var msg UdpMessage
+	msg.Raddr = "broadcast"
 	for {
-		elev = <-receiveCh
-		UdpBroadcast(toAdress, elev)
-
+		//fmt.Println("Prøver å motta status")
+		elev = <-statusCh
 		//fmt.Printf("%+v", elev)
+		//fmt.Println("Sender status")
+		msg.Data = elev
+		sendCh <- msg
 	}
 }
 
-func Receive_status(receiveCh chan Elev_control.Elevator, timeoutCh chan int) {
-	listenAddr := "129.241.187.143" + ":13337"
-	go ListenToBroadcast(listenAddr, receiveCh, timeoutCh)
+func Receive_status(receiveCh chan UdpMessage) {
 	var elev Elev_control.Elevator
+	var msg UdpMessage
 	for {
-		elev = <-receiveCh
-		fmt.Printf("%+v", elev)
+		msg = <-receiveCh
+		elev = msg.Data
+		//fmt.Println("Mottar udp melding")
+		Elev_control.PrintElev(elev)
+		fmt.Println("")
 	}
 }

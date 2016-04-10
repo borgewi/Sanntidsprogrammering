@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func Run_Elevator(recieveCh chan Elevator) {
+func Run_Elevator(statusCh chan Elevator) {
 	//var elevator2 Elevator
 
 	//Init elev_state
@@ -14,7 +14,7 @@ func Run_Elevator(recieveCh chan Elevator) {
 		fsm_onInitBetweenFloors()
 	}
 	elevator_uninitialized()
-	//go send_status(recieveCh)
+	go send_status(statusCh)
 	running := true
 	var prev_button [Driver.NUMFLOORS][Driver.NUMBUTTONS]int
 	var prev_floor int
@@ -40,10 +40,28 @@ func Run_Elevator(recieveCh chan Elevator) {
 		prev_floor = f
 		// Timer
 		if timer_timedOut() {
-			fmt.Println("timer stoppet")
 			fsm_onDoorTimeout()
 			timer_stop()
 		}
 		time.Sleep(25 * time.Millisecond) //Hardkoding
+	}
+}
+
+func send_status(statusCh chan Elevator) {
+	for {
+		time.Sleep(1000 * time.Millisecond)
+		//var data []byte
+		//data = json.Marshal(elevator)
+		statusCh <- elevator
+	}
+}
+
+func PrintElev(elev Elevator) {
+	fmt.Println("")
+	fmt.Println("Floor: ", elev.Floor)
+	fmt.Println("Direction: ", elev.Dir)
+	for f := elev.Floor + 1; f < 4; f++ {
+		fmt.Printf("%+v", elev.Requests[f])
+		fmt.Println("")
 	}
 }

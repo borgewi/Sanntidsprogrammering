@@ -104,12 +104,3 @@ func elevator_uninitialized() {
 		}
 	}
 }
-
-func send_status(recieveCh chan Elevator) {
-	for {
-		time.Sleep(2000 * time.Millisecond)
-		//var data []byte
-		//data = json.Marshal(elevator)
-		recieveCh <- elevator
-	}
-}

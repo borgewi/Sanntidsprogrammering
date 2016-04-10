@@ -20,11 +20,10 @@ const (
 
 func main() {
 	Driver.ElevInit()
-	receiveCh := make(chan Elev_control.Elevator)
-	
-	go Elev_control.Run_Elevator(receiveCh)
-	go Master_Slave.Determine_Rank(receiveCh)
+	statusCh := make(chan Elev_control.Elevator)
+
+	go Elev_control.Run_Elevator(statusCh)
+	go Master_Slave.Determine_Rank(statusCh)
 	for {
 	}
 }
-
