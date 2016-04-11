@@ -7,9 +7,6 @@ import (
 	//"encoding/json"
 )
 
-var (
-	elevator Elevator
-)
 
 func setAllLights(e Elevator) {
 	for floor := 0; floor < Driver.NUMFLOORS; floor++ {
@@ -94,13 +91,20 @@ func fsm_onDoorTimeout() {
 	}
 }
 
-func elevator_uninitialized() {
+func fsm_elevatorUninitialized() {
 	elevator.Dir = D_Idle
 	elevator.Behaviour = EB_Idle
 	elevator.Floor = Driver.ElevGetFloorSensorSignal()
+	elevator.Elev_ID = getActiveTime()
 	for f := 0; f < Driver.NUMFLOORS; f++ {
 		for b := 0; b < Driver.NUMBUTTONS; b++ {
 			elevator.Requests[f][b] = false
 		}
+	}
+}
+
+func Fsm_addOrder(Order [2]int, Order_ID int64){
+	if Order_ID == elevator.Elev_ID{
+		elevator.Requests[Order[0]][Order[1]] = true
 	}
 }

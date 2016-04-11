@@ -15,9 +15,12 @@ var lAddr *net.UDPAddr //Local address
 var bAddr *net.UDPAddr //Broadcast address
 
 type UdpMessage struct {
-	Raddr  string //if receiving raddr=senders address, if sending raddr should be set to "broadcast" or an ip:port
-	Data   Elev_control.Elevator
-	Length int //length of received data, in #bytes // N/A for sending
+	Raddr 		string //if receiving raddr=senders address, if sending raddr should be set to "broadcast" or an ip:port
+	Data 		Elev_control.Elevator
+	Length 		int //length of received data, in #bytes // N/A for sending
+	Order_ID 	int64
+	Order 		[2]int
+
 }
 
 func InitializeConnection(localPort, broadcastPort int) (lConn, bConn *net.UDPConn, lAddr, bAddr *net.UDPAddr) {
@@ -162,54 +165,3 @@ func DecodeMessage(Msg *Elev_control.Elevator, arr []byte) {
 	json.Unmarshal(arr, Msg)
 }
 
-/*
-func CheckError(err error) {
-	if err != nil {
-		fmt.Println("Error: ", err)
-	}
-}
-
-func ListenToBroadcast(listenAddress string, receiveUdpCh chan Elev_control.Elevator, timeoutCh chan int) {
-	fmt.Println("Running ListenToBroadcast")
-	ServerAddress, err := net.ResolveUDPAddr("udp", listenAddress)
-	CheckError(err)
-
-	ServerConnection, err := net.ListenUDP("udp", ServerAddress)
-	CheckError(err)
-
-	defer ServerConnection.Close()
-
-	var elev Elev_control.Elevator
-
-mainloop:
-	for {
-		buffer := make([]byte, 1024)
-		ServerConnection.SetDeadline(time.Now().Add(3000 * time.Millisecond))
-		_, _, err := ServerConnection.ReadFromUDP(buffer)
-		CheckError(err)
-		DecodeMessage(buffer, &elev)
-		if err != nil {
-			timeoutCh <- 1
-			break mainloop
-		}
-		receiveUdpCh <- elev
-	}
-}
-
-func UdpBroadcast(toAdress string, elev Elev_control.Elevator) {
-	ServerAddress, err := net.ResolveUDPAddr("udp", toAdress)
-	CheckError(err)
-
-	Connection, err := net.DialUDP("udp", nil, ServerAddress) //Returns type UDPConn which we can send msg to
-	CheckError(err)
-
-	defer Connection.Close() //Closes the connection after udpBroadcast functioncall
-	//buffer := make([]byte, 1024)
-	buffer := EncodeMessage(elev)
-	_, err = Connection.Write(buffer)
-	CheckError(err)
-	fmt.Println("Sender status")
-	//time.Sleep(time.Millisecond * 1000)
-
-}
-*/

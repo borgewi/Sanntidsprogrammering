@@ -28,14 +28,6 @@ const (
 	EB_Moving
 )
 
-type Elevator struct {
-	Floor     int
-	Dir       Direction
-	Requests  [Driver.NUMFLOORS][Driver.NUMBUTTONS]bool
-	Behaviour ElevatorBehaviour
-	//doorOpenDuration_s float
-}
-
 func requests_above(e Elevator) bool {
 	for f := e.Floor + 1; f < Driver.NUMFLOORS; f++ {
 		for btn := 0; btn < Driver.NUMBUTTONS; btn++ {

@@ -6,6 +6,19 @@ import (
 	"time"
 )
 
+type Elevator struct {
+	Floor     int
+	Dir       Direction
+	Requests  [Driver.NUMFLOORS][Driver.NUMBUTTONS]bool
+	Behaviour ElevatorBehaviour
+	Elev_ID	  int64
+	//doorOpenDuration_s float
+}
+
+var (
+	elevator Elevator
+)
+
 func Run_Elevator(statusCh chan Elevator) {
 	//var elevator2 Elevator
 
@@ -13,8 +26,11 @@ func Run_Elevator(statusCh chan Elevator) {
 	if Driver.ElevGetFloorSensorSignal() == -1 {
 		fsm_onInitBetweenFloors()
 	}
-	elevator_uninitialized()
+	fsm_elevatorUninitialized()
+	fmt.Printf("%+v",elevator.Elev_ID)
+	fmt.Println("")
 	go send_status(statusCh)
+
 	running := true
 	var prev_button [Driver.NUMFLOORS][Driver.NUMBUTTONS]int
 	var prev_floor int
@@ -60,7 +76,7 @@ func PrintElev(elev Elevator) {
 	fmt.Println("")
 	fmt.Println("Floor: ", elev.Floor)
 	fmt.Println("Direction: ", elev.Dir)
-	for f := elev.Floor + 1; f < 4; f++ {
+	for f := 0; f < 4; f++ {
 		fmt.Printf("%+v", elev.Requests[f])
 		fmt.Println("")
 	}
