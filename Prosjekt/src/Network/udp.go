@@ -23,6 +23,79 @@ type UdpMessage struct {
 
 }
 
+/*
+channels:
+	if we are master (struct { isMaster bool, slaves []addr} )
+	message to network
+	message from network
+
+func Init(msgToNetwork chan UdpMessage, msgFromNetwork chan UdpMessage, isMaster chan ??){
+
+	
+
+	msgToNetwork_master := make(chan UdpMessage)
+	msgToNetwork_slave := make(chan UdpMessage)
+	go transmitMsg(masterPort, msgToNetwork_master)
+	go transmitMsg(slavePort, msgToNetwork_slave)
+
+
+	go func(){
+		isMaster := false
+		for {
+			select {
+			msg from slaves:
+				if master
+					send to user
+				else 
+					ignore
+
+			msg from master
+				if master
+					ignore (should not happen, can only have one master anyway)
+				else
+					send to user
+
+			msg := <-msgToNetwork
+				if isMaster {
+					msgToNetwork_master <- msg
+				} else {
+					msgToNetwork_slave <- msg
+				}
+
+			new list of peers
+				if ip = highest in peers
+					become master
+				else
+					become slave
+				send {isMaster, peers.filter(ip)} to user
+			}
+		}
+	}()
+}
+
+func receiveMsg(port string, messageFromNetwork chan UdpMessage){
+	set up conn for port
+	for {
+		receive
+		decode
+		shove on channel
+	}
+}
+
+
+func transmitMsg(port string, messageToNetwork chan UdpMessage){
+	set up conn for port
+	for {
+		read from chan
+		encode
+		send/write to network
+	}
+}
+
+
+
+*/
+
 func InitializeConnection(localPort, broadcastPort int) (lConn, bConn *net.UDPConn, lAddr, bAddr *net.UDPAddr) {
 
 	bAddr, err := net.ResolveUDPAddr("udp4", "129.241.187.255:"+strconv.Itoa(broadcastPort))
@@ -35,6 +108,9 @@ func InitializeConnection(localPort, broadcastPort int) (lConn, bConn *net.UDPCo
 	lAddr.Port = localPort
 
 	localConn, err := net.ListenUDP("udp4", lAddr)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	broadcastConn, err := net.ListenUDP("udp", bAddr)
 

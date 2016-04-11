@@ -3,7 +3,7 @@ package Elev_control
 import (
 	"Driver"
 	"time"
-	//"fmt"
+	"fmt"
 	//"encoding/json"
 )
 
@@ -106,5 +106,7 @@ func fsm_elevatorUninitialized() {
 func Fsm_addOrder(Order [2]int, Order_ID int64){
 	if Order_ID == elevator.Elev_ID{
 		elevator.Requests[Order[0]][Order[1]] = true
+	} else{
+		fmt.Println("Feil Order_ID")
 	}
 }

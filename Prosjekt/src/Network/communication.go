@@ -31,8 +31,8 @@ func Receive_msg(receiveCh chan UdpMessage) {
 			fmt.Println("")
 			break
 		default:
-			Elev_control.Fsm_addOrder(msg.Order, msg.Order_ID)
 			fmt.Println("Ordre mottas til: ",msg.Order_ID)
+			Elev_control.Fsm_addOrder(msg.Order, msg.Order_ID)
 		}
 		//fmt.Println("Mottar udp melding")
 	}
@@ -41,7 +41,11 @@ func Receive_msg(receiveCh chan UdpMessage) {
 func Master_send_order(ID int64, new_order[2] int, sendCh chan UdpMessage){
 	//new_order = Elev_control.Elevator.Requests
 	var msg UdpMessage
+	//var elev Elev_control.Elevator
+	msg.Raddr = "broadcast"
 	msg.Order_ID = ID
 	msg.Order = new_order
+	//msg.Data = elev
 	sendCh <- msg
+	fmt.Println("ssssssssssssssssssssssssssssssssssssssssssssssssssssssssss")
 }

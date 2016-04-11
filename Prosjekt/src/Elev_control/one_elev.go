@@ -66,8 +66,6 @@ func Run_Elevator(statusCh chan Elevator) {
 func send_status(statusCh chan Elevator) {
 	for {
 		time.Sleep(1000 * time.Millisecond)
-		//var data []byte
-		//data = json.Marshal(elevator)
 		statusCh <- elevator
 	}
 }

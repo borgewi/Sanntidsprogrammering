@@ -20,6 +20,7 @@ func Master(statusCh chan Elev_control.Elevator){
 	Network.UdpReceiveInit(slavePort, slavePort, receiveCh)
 
 	wait_for_slave(statusCh, receiveCh, sendCh)
+	go reset_con_on_error(receiveCh)
 	test_send_order(sendCh)
 	//start backup
 }
@@ -30,6 +31,7 @@ func Slave(statusCh chan Elev_control.Elevator, receiveMasterCh chan Network.Udp
 	Network.UdpTransmitInit(slavePort, slavePort, sendCh)
 	go Network.Receive_msg(receiveMasterCh)
 	go Network.Get_status_and_broadcast(sendCh, statusCh)
+	go reset_con_on_error(receiveMasterCh)
 }
 
 func Determine_Rank(statusCh chan Elev_control.Elevator) {
@@ -85,6 +87,17 @@ func test_send_order(sendCh chan Network.UdpMessage){
 	new_order[1] = 1
 	order_ID := All_elevs.Status[1].Elev_ID
 	Network.Master_send_order(order_ID, new_order, sendCh)
+}
+
+//Dårlig funksjon. Quickfix
+func reset_con_on_error(receiveCh chan Network.UdpMessage){
+	for {
+		if checkTimeout(receiveCh) {
+			time.Sleep(1000 * time.Millisecond)
+			Network.UdpReceiveInit(slavePort, slavePort, receiveCh)
+			fmt.Println("timeout")
+		}
+	}
 }
 
 
