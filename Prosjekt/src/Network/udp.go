@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"net"
 	"strconv"
-	"time"
+	//"time"
 )
 
 const MSGsize = 512
-
-var lAddr *net.UDPAddr //Local address
-var bAddr *net.UDPAddr //Broadcast address
+const masterPort = 47838
+const slavePort = 84620
+//var lAddr *net.UDPAddr //Local address
+//var bAddr *net.UDPAddr //Broadcast address
 
 type UdpMessage struct {
 	Raddr 		string //if receiving raddr=senders address, if sending raddr should be set to "broadcast" or an ip:port
@@ -20,8 +21,141 @@ type UdpMessage struct {
 	Length 		int //length of received data, in #bytes // N/A for sending
 	Order_ID 	int64
 	Order 		[2]int
-
 }
+
+
+func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool){
+	alive_port := "13579"
+	my_IP := "129.241.187.149"
+
+	peerListLocalCh := make(chan []string)
+	go udpSendAlive(alive_port)
+	go udpRecvAlive(alive_port, peerListLocalCh)
+
+	msgToNetwork_master := make(chan UdpMessage)
+	msgToNetwork_slave := make(chan UdpMessage)
+	msgFromNetwork_master := make(chan UdpMessage)
+	msgFromNetwork_slave := make(chan UdpMessage)
+	go transmitMsg(masterPort, msgToNetwork_master)
+	go transmitMsg(slavePort, msgToNetwork_slave)
+	go receiveMsg(masterPort, msgFromNetwork_master)
+	go receiveMsg(slavePort, msgFromNetwork_slave)
+
+	go func(){
+		isMaster := false
+		for {
+			select {
+			case msg := <- msgFromNetwork_slave:
+				if isMaster{
+					msgFromNetwork <- msg
+				}
+			case msg := <- msgToNetwork_master:
+				if !isMaster{
+					msgFromNetwork <- msg
+				}
+			case msg := <-msgToNetwork:
+				if isMaster {
+					msgToNetwork_master <- msg
+				} else {
+					msgToNetwork_slave <- msg
+				}
+			case new_peer_list := <- peerListLocalCh:
+				highest_IP := my_IP
+				for _, IP := range new_peer_list {
+					if highest_IP< IP{
+						highest_IP = IP
+					}
+				}
+				if my_IP == highest_IP{
+					isMaster = true
+					isMasterCh <- true
+				}else{
+					isMaster = false
+					isMasterCh <- false
+				}
+				//send {isMaster, peers.filter(ip)} to user
+			}
+		}
+	}()
+}
+
+func receiveMsg(port int, messageFromNetwork chan UdpMessage){
+	bAddr, err := net.ResolveUDPAddr("udp4", "129.241.187.255:"+strconv.Itoa(port))
+	broadcastConn, err := net.ListenUDP("udp", bAddr)
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("ERROR in udp_receive_server: \nClosing connection.", r)
+			broadcastConn.Close()
+		}
+	}()
+
+	if err != nil {
+		broadcastConn.Close()
+	}
+	
+	for {
+		//receive
+		buf := make([]byte, MSGsize)
+		n, _, err := broadcastConn.ReadFromUDP(buf)
+		if err != nil {
+			broadcastConn.Close()
+		}
+		buf = buf[:n]
+		//deadline??
+		//decode
+		var msg UdpMessage
+		DecodeMessage(&msg, buf)
+		//shove on channel
+		messageFromNetwork <- msg		
+	}
+}
+
+
+func transmitMsg(port int, messageToNetwork chan UdpMessage){
+	bAddr, _ := net.ResolveUDPAddr("udp4", "129.241.187.255:"+strconv.Itoa(port))
+	broadcastConn, _ := net.DialUDP("udp4",nil, bAddr)
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("ERROR in udpTransmitServer: %s \n Closing connection.", r)
+			broadcastConn.Close()
+		}
+	}()
+
+	//if err != nil {
+	//	broadcastConn.Close()
+	//}
+
+	for {
+		//read from chan
+		msg := <-messageToNetwork
+		//encode and write to network
+		_, err := broadcastConn.WriteToUDP(EncodeMessage(msg), bAddr)
+		if err != nil {
+			fmt.Println("Error: udpTransmitServer: could not write\n")
+			panic(err)
+		}
+	}
+}
+
+func EncodeMessage(msg UdpMessage) []byte {
+	returnMessage, err := json.Marshal(msg)
+	if err != nil {
+		fmt.Printf("Error: problems encoding UdpMessage struct.\n")
+		panic(err)
+	}
+	return returnMessage
+}
+
+func DecodeMessage(msg *UdpMessage, arr []byte) {
+	json.Unmarshal(arr, msg)
+}
+
+
+
+
+
 
 /*
 channels:
@@ -96,6 +230,13 @@ func transmitMsg(port string, messageToNetwork chan UdpMessage){
 
 */
 
+
+
+
+
+
+
+/*
 func InitializeConnection(localPort, broadcastPort int) (lConn, bConn *net.UDPConn, lAddr, bAddr *net.UDPAddr) {
 
 	bAddr, err := net.ResolveUDPAddr("udp4", "129.241.187.255:"+strconv.Itoa(broadcastPort))
@@ -228,16 +369,4 @@ func udpConnectionReader(conn *net.UDPConn, rcvCh, timeoutCh chan UdpMessage) {
 	}
 }
 
-func EncodeMessage(e Elev_control.Elevator) []byte {
-	returnMessage, err := json.Marshal(e)
-	if err != nil {
-		fmt.Printf("Error: problems encoding elevator struct.\n")
-		panic(err)
-	}
-	return returnMessage
-}
-
-func DecodeMessage(Msg *Elev_control.Elevator, arr []byte) {
-	json.Unmarshal(arr, Msg)
-}
-
+*/

@@ -21,10 +21,10 @@ const (
 
 func main() {
 	Driver.ElevInit()
-	statusCh := make(chan Elev_control.Elevator)
+	localStatusCh := make(chan Elev_control.Elevator)
 
-	go Elev_control.Run_Elevator(statusCh)
-	go Master_Slave.Determine_Rank(statusCh)
+	go Elev_control.Run_Elevator(localStatusCh)
+	go Master_Slave.Princess(localStatusCh)
 	for {
 	}
 }
