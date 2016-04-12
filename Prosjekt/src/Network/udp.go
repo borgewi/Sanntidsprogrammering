@@ -11,7 +11,7 @@ import (
 
 const MSGsize = 512
 const masterPort = 47838
-const slavePort = 84620
+const slavePort = 47839
 //var lAddr *net.UDPAddr //Local address
 //var bAddr *net.UDPAddr //Broadcast address
 
@@ -26,8 +26,8 @@ type UdpMessage struct {
 
 func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool){
 	alive_port := "13579"
-	my_IP := "129.241.187.149"
-
+	my_IP := GetLocalIP()
+	fmt.Println("Lokal ip_addresse: \n", my_IP)
 	peerListLocalCh := make(chan []string)
 	go udpSendAlive(alive_port)
 	go udpRecvAlive(alive_port, peerListLocalCh)
@@ -44,22 +44,27 @@ func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool
 	go func(){
 		isMaster := false
 		for {
+			fmt.Println("Inne i for-løkke i Init_udp")
 			select {
 			case msg := <- msgFromNetwork_slave:
+				fmt.Println("case: msgFromNetwork_slave")
 				if isMaster{
 					msgFromNetwork <- msg
 				}
 			case msg := <- msgToNetwork_master:
+				fmt.Println("case: msgToNetwork_master")
 				if !isMaster{
 					msgFromNetwork <- msg
 				}
 			case msg := <-msgToNetwork:
+				fmt.Println("case: msgToNetwork")
 				if isMaster {
 					msgToNetwork_master <- msg
 				} else {
 					msgToNetwork_slave <- msg
 				}
 			case new_peer_list := <- peerListLocalCh:
+				fmt.Println("case: peerListLocalCh")
 				highest_IP := my_IP
 				for _, IP := range new_peer_list {
 					if highest_IP< IP{
@@ -69,19 +74,23 @@ func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool
 				if my_IP == highest_IP{
 					isMaster = true
 					isMasterCh <- true
+					fmt.Println("Er master i case: peerListLocalCh")
 				}else{
 					isMaster = false
 					isMasterCh <- false
+					fmt.Println("Er slave i case: peerListLocalCh")
 				}
+				fmt.Println("Ferdig med peerListLocalCh")
 				//send {isMaster, peers.filter(ip)} to user
 			}
 		}
 	}()
+	fmt.Println("Ferdig med Init_udp")
 }
 
 func receiveMsg(port int, messageFromNetwork chan UdpMessage){
 	bAddr, err := net.ResolveUDPAddr("udp4", "129.241.187.255:"+strconv.Itoa(port))
-	broadcastConn, err := net.ListenUDP("udp", bAddr)
+	broadcastConn, err := net.ListenUDP("udp4", bAddr)
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -113,7 +122,7 @@ func receiveMsg(port int, messageFromNetwork chan UdpMessage){
 
 
 func transmitMsg(port int, messageToNetwork chan UdpMessage){
-	bAddr, _ := net.ResolveUDPAddr("udp4", "129.241.187.255:"+strconv.Itoa(port))
+	bAddr, _ := net.ResolveUDPAddr("udp4", "255.255.255.255:"+strconv.Itoa(port))
 	broadcastConn, _ := net.DialUDP("udp4",nil, bAddr)
 
 	defer func() {
@@ -131,11 +140,12 @@ func transmitMsg(port int, messageToNetwork chan UdpMessage){
 		//read from chan
 		msg := <-messageToNetwork
 		//encode and write to network
-		_, err := broadcastConn.WriteToUDP(EncodeMessage(msg), bAddr)
-		if err != nil {
-			fmt.Println("Error: udpTransmitServer: could not write\n")
-			panic(err)
-		}
+		//_, err := broadcastConn.WriteToUDP(EncodeMessage(msg), bAddr)
+		broadcastConn.Write(EncodeMessage(msg))
+		//if err != nil {
+		//	fmt.Println("Error: udpTransmitServer: could not write\n")
+		//	panic(err)
+		//}
 	}
 }
 
@@ -152,7 +162,21 @@ func DecodeMessage(msg *UdpMessage, arr []byte) {
 	json.Unmarshal(arr, msg)
 }
 
-
+func GetLocalIP() string {
+    addrs, err := net.InterfaceAddrs()
+    if err != nil {
+        return ""
+    }
+    for _, address := range addrs {
+        // check the address type and if it is not a loopback the display it
+        if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+            if ipnet.IP.To4() != nil {
+                return ipnet.IP.String()
+            }
+        }
+    }
+    return ""
+}
 
 
 

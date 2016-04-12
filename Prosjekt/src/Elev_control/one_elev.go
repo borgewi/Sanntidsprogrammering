@@ -19,7 +19,7 @@ var (
 	elevator Elevator
 )
 
-func Run_Elevator(statusCh chan Elevator) {
+func Run_Elevator(localStatusCh chan Elevator) {
 	//var elevator2 Elevator
 
 	//Init elev_state
@@ -29,7 +29,7 @@ func Run_Elevator(statusCh chan Elevator) {
 	fsm_elevatorUninitialized()
 	fmt.Printf("%+v",elevator.Elev_ID)
 	fmt.Println("")
-	go send_status(statusCh)
+	go send_status(localStatusCh)
 
 	running := true
 	var prev_button [Driver.NUMFLOORS][Driver.NUMBUTTONS]int
@@ -63,10 +63,11 @@ func Run_Elevator(statusCh chan Elevator) {
 	}
 }
 
-func send_status(statusCh chan Elevator) {
+func send_status(localStatusCh chan Elevator) {
 	for {
 		time.Sleep(1000 * time.Millisecond)
-		statusCh <- elevator
+		localStatusCh <- elevator
+		fmt.Println("Status sendt fra Elev_control")
 	}
 }
 

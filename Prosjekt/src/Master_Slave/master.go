@@ -19,8 +19,15 @@ func Princess(localStatusCh chan Elev_control.Elevator){
 	Network.Init_udp(msgToNetwork, msgFromNetwork, isMasterCh)
 	//test_send_order(sendCh)
 	go Network.Get_status_and_broadcast(msgToNetwork, localStatusCh)
-
-
+	var isMaster bool
+	for{
+		isMaster = <- isMasterCh
+		if isMaster{
+			fmt.Println("Er master")
+		} else{
+			fmt.Println("Er slave")
+		}
+	}
 
 
 	//Init All_elevs
