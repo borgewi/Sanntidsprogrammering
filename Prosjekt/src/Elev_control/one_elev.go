@@ -63,6 +63,7 @@ func Run_Elevator(localStatusCh chan Elevator) {
 	}
 }
 
+
 func send_status(localStatusCh chan Elevator) {
 	for {
 		time.Sleep(1000 * time.Millisecond)

@@ -61,10 +61,10 @@ func requests_chooseDirection(e Elevator) Direction {
 			return D_Idle
 		}
 	case D_Down:
-		if requests_above(e) {
-			return D_Up
-		} else if requests_below(e) {
+		if requests_below(e) {
 			return D_Down
+		} else if requests_above(e) {
+			return D_Up
 		} else {
 			return D_Idle
 		}

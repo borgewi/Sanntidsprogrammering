@@ -20,6 +20,7 @@ type UdpMessage struct {
 	Length 		int //length of received data, in #bytes // N/A for sending
 	Order_ID 	int64
 	Order 		[2]int
+	Btn_calls	[4][2]bool
 }
 
 
