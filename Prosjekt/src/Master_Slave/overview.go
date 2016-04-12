@@ -45,3 +45,7 @@ func delete_All_elevs(){
 	//Elevators_online = Elevators_online
 	//Funker dette?
 }
+
+//All_btn_calls må oppdateres når en heis stopper i en etasje.
+//Fjerne alle btn_calls som er i samme retning som den heisen.
+//Eventuelt fjerne alle btn_calls i den etasjen dersom heisen har Dir D_Idle
