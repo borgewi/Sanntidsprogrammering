@@ -2,11 +2,10 @@ package Elev_control
 
 import (
 	"Driver"
-	"time"
 	"fmt"
+	"time"
 	//"encoding/json"
 )
-
 
 func setAllLights(e Elevator) {
 	for floor := 0; floor < Driver.NUMFLOORS; floor++ {
@@ -25,7 +24,18 @@ func fsm_onInitBetweenFloors() {
 	Driver.ElevSetMotorDirection(int(D_Idle))
 }
 
-func fsm_onRequestButtonPress(btn_floor int, btn_type Button) {
+func fsm_onRequestButtonPress(btn_floor int, btn_type Button, sendBtnCallsCh chan [2]int) {
+	switch btn_type {
+	case B_Cab:
+		fsm_onNewActiveRequest(btn_floor, btn_type)
+	case B_HallDown:
+		fsm_SendNewOrderToMaster(btn_floor, btn_type, sendBtnCallsCh)
+	case B_HallUp:
+		fsm_SendNewOrderToMaster(btn_floor, btn_type, sendBtnCallsCh)
+	}
+}
+
+func fsm_onNewActiveRequest(btn_floor int, btn_type Button) {
 	switch elevator.Behaviour {
 	case EB_DoorOpen:
 		if elevator.Floor == btn_floor {
@@ -53,6 +63,13 @@ func fsm_onRequestButtonPress(btn_floor int, btn_type Button) {
 	}
 
 	setAllLights(elevator)
+}
+
+func fsm_SendNewOrderToMaster(btn_floor int, btn_type Button, sendBtnCallsCh chan [2]int) {
+	var newBtnCall [2]int
+	newBtnCall[0] = btn_floor
+	newBtnCall[1] = int(btn_type)
+	sendBtnCallsCh <- newBtnCall
 }
 
 func fsm_onFloorArrival(newFloor int) {
@@ -103,13 +120,10 @@ func fsm_elevatorUninitialized() {
 	}
 }
 
-func Fsm_addOrder(Order [2]int, Order_ID int64){
-	fmt.Println("Inne i Fsm_addOrder")
-	elevator.Requests[Order[0]][Order[1]] = true
-	fmt.Printf("%+v",Order)
-	if Order_ID != elevator.Elev_ID{
-		elevator.Requests[Order[0]][Order[1]] = true
-	} else{
+func Fsm_addOrder(Order [2]int, Order_ID int64) {
+	if Order_ID == elevator.Elev_ID {
+		fsm_onNewActiveRequest(Order[0], Button(Order[1]))
+	} else {
 		fmt.Println("Feil Order_ID")
 	}
 }

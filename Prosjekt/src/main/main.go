@@ -22,9 +22,10 @@ const (
 func main() {
 	Driver.ElevInit()
 	localStatusCh := make(chan Elev_control.Elevator)
+	sendBtnCallsCh := make(chan [2]int)
 
-	go Elev_control.Run_Elevator(localStatusCh)
-	go Master_Slave.Princess(localStatusCh)
+	go Elev_control.Run_Elevator(localStatusCh, sendBtnCallsCh)
+	go Master_Slave.Princess(localStatusCh, sendBtnCallsCh)
 	for {
 	}
 }

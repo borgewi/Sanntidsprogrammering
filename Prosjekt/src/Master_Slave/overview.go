@@ -1,14 +1,11 @@
 package Master_Slave
 
 import (
-	"Elev_control"
 	"Driver"
+	"Elev_control"
 	//"time"
 	//"fmt"
 )
-
-
-// func oversikt skal vite hvor alle heisene er og hvilken retning de har. 
 
 /*type Elevator struct {
 	Floor     int
@@ -19,19 +16,12 @@ import (
 	//doorOpenDuration_s float
 }*/
 
-/*type Elevators_online struct {
-	Status			[]Elev_control.Elevator
-	All_btn_calls 	[Driver.NUMFLOORS][Driver.NUMBUTTONS-1]bool
-}*/
+var Elevators_online []Elev_control.Elevator
+var All_btn_calls [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]bool
 
-
-var Elevators_online 	[]Elev_control.Elevator
-var All_btn_calls 		[Driver.NUMFLOORS][Driver.NUMBUTTONS-1]bool
-
-
-func update_Elevators_online(curr_elev Elev_control.Elevator){
-	for i,elev := range Elevators_online{
-		if elev.Elev_ID == curr_elev.Elev_ID{
+func update_Elevators_online(curr_elev Elev_control.Elevator) {
+	for i, elev := range Elevators_online {
+		if elev.Elev_ID == curr_elev.Elev_ID {
 			Elevators_online[i] = curr_elev
 			return
 		}
@@ -39,13 +29,19 @@ func update_Elevators_online(curr_elev Elev_control.Elevator){
 	Elevators_online = append(Elevators_online, curr_elev)
 }
 
-func delete_All_elevs(){
-	Elevators_online  = Elevators_online[:1]
-	
-	//Elevators_online = Elevators_online
-	//Funker dette?
+func delete_All_elevs() {
+	Elevators_online = Elevators_online[:1]
+}
+
+func update_btnCalls(newCall [2]int) bool {
+	if All_btn_calls[newCall[0]][newCall[1]] {
+		return false
+	}
+	All_btn_calls[newCall[0]][newCall[1]] = true
+	return true
 }
 
 //All_btn_calls må oppdateres når en heis stopper i en etasje.
 //Fjerne alle btn_calls som er i samme retning som den heisen.
-//Eventuelt fjerne alle btn_calls i den etasjen dersom heisen har Dir D_Idle
+//Eventuelt fjerne alle btn_calls i den etasjen dersom heisen har Dir D_Idle.
+//Master må broadcste Elevators_online hver gang den oppdateres.

@@ -11,7 +11,7 @@ type Elevator struct {
 	Dir       Direction
 	Requests  [Driver.NUMFLOORS][Driver.NUMBUTTONS]bool
 	Behaviour ElevatorBehaviour
-	Elev_ID	  int64
+	Elev_ID   int64
 	//doorOpenDuration_s float
 }
 
@@ -19,7 +19,7 @@ var (
 	elevator Elevator
 )
 
-func Run_Elevator(localStatusCh chan Elevator) {
+func Run_Elevator(localStatusCh chan Elevator, sendBtnCallsCh chan [2]int) {
 	//var elevator2 Elevator
 
 	//Init elev_state
@@ -27,7 +27,7 @@ func Run_Elevator(localStatusCh chan Elevator) {
 		fsm_onInitBetweenFloors()
 	}
 	fsm_elevatorUninitialized()
-	fmt.Printf("%+v",elevator.Elev_ID)
+	fmt.Printf("%+v", elevator.Elev_ID)
 	fmt.Println("")
 	go send_status(localStatusCh)
 
@@ -41,7 +41,7 @@ func Run_Elevator(localStatusCh chan Elevator) {
 			for b := 0; b < Driver.NUMBUTTONS; b++ {
 				v := Driver.ElevGetButtonSignal(b, f)
 				if v&int(v) != prev_button[f][b] {
-					fsm_onRequestButtonPress(f, Button(b))
+					fsm_onRequestButtonPress(f, Button(b), sendBtnCallsCh)
 				}
 				prev_button[f][b] = v
 			}
@@ -62,7 +62,6 @@ func Run_Elevator(localStatusCh chan Elevator) {
 		time.Sleep(25 * time.Millisecond) //Hardkoding
 	}
 }
-
 
 func send_status(localStatusCh chan Elevator) {
 	for {
