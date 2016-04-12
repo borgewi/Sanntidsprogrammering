@@ -16,7 +16,6 @@ const slavePort = 47839
 //var bAddr *net.UDPAddr //Broadcast address
 
 type UdpMessage struct {
-	Raddr 		string //if receiving raddr=senders address, if sending raddr should be set to "broadcast" or an ip:port
 	Data 		Elev_control.Elevator
 	Length 		int //length of received data, in #bytes // N/A for sending
 	Order_ID 	int64
@@ -44,15 +43,14 @@ func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool
 	go func(){
 		isMaster := false
 		for {
-			fmt.Println("Inne i for-løkke i Init_udp")
 			select {
 			case msg := <- msgFromNetwork_slave:
 				fmt.Println("case: msgFromNetwork_slave")
 				if isMaster{
 					msgFromNetwork <- msg
 				}
-			case msg := <- msgToNetwork_master:
-				fmt.Println("case: msgToNetwork_master")
+			case msg := <- msgFromNetwork_master:
+				fmt.Println("case: msgFromNetwork_master")
 				if !isMaster{
 					msgFromNetwork <- msg
 				}
@@ -74,22 +72,18 @@ func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool
 				if my_IP == highest_IP{
 					isMaster = true
 					isMasterCh <- true
-					fmt.Println("Er master i case: peerListLocalCh")
 				}else{
 					isMaster = false
 					isMasterCh <- false
-					fmt.Println("Er slave i case: peerListLocalCh")
 				}
-				fmt.Println("Ferdig med peerListLocalCh")
 				//send {isMaster, peers.filter(ip)} to user
 			}
 		}
 	}()
-	fmt.Println("Ferdig med Init_udp")
 }
 
 func receiveMsg(port int, messageFromNetwork chan UdpMessage){
-	bAddr, err := net.ResolveUDPAddr("udp4", "129.241.187.255:"+strconv.Itoa(port))
+	bAddr, err := net.ResolveUDPAddr("udp4", "255.255.255.255:"+strconv.Itoa(port))
 	broadcastConn, err := net.ListenUDP("udp4", bAddr)
 
 	defer func() {
