@@ -20,7 +20,7 @@ func fsm_onInitBetweenFloors() {
 	Driver.ElevSetMotorDirection(int(D_Down))
 	elevator.Dir = D_Down
 	elevator.Behaviour = EB_Moving
-	lastFloorTime = getActiveTime()
+	lastFloorTime = GetActiveTime()
 	for Driver.ElevGetFloorSensorSignal() == -1 {
 	}
 	Driver.ElevSetMotorDirection(int(D_Idle))
@@ -63,7 +63,7 @@ func fsm_onNewActiveRequest(btn_floor int, btn_type Button) {
 		} else {
 			Driver.ElevSetMotorDirection(int(elevator.Dir))
 			elevator.Behaviour = EB_Moving
-			lastFloorTime = getActiveTime()
+			lastFloorTime = GetActiveTime()
 		}
 		break
 	}
@@ -91,7 +91,7 @@ func fsm_onFloorArrival(newFloor int) {
 			setAllLights(elevator)
 			elevator.Behaviour = EB_DoorOpen
 			//fsm_deleteTimeStamp(newFloor)
-			lastFloorTime = getActiveTime()
+			lastFloorTime = GetActiveTime()
 		}
 		break
 	default:
@@ -109,7 +109,7 @@ func fsm_onDoorTimeout() {
 			elevator.Behaviour = EB_Idle
 		} else {
 			elevator.Behaviour = EB_Moving
-			lastFloorTime = getActiveTime()
+			lastFloorTime = GetActiveTime()
 		}
 		break
 	default:
@@ -121,7 +121,7 @@ func fsm_elevatorUninitialized() {
 	elevator.Dir = D_Idle
 	elevator.Behaviour = EB_Idle
 	elevator.Floor = Driver.ElevGetFloorSensorSignal()
-	elevator.Elev_ID = getActiveTime()
+	elevator.Elev_ID = GetActiveTime()
 	for f := 0; f < Driver.NUMFLOORS; f++ {
 		for b := 0; b < Driver.NUMBUTTONS; b++ {
 			elevator.Requests[f][b] = false
@@ -136,10 +136,11 @@ func Fsm_addOrder(Order [2]int, Order_ID int64) {
 		fmt.Println("Feil Order_ID")
 	}
 }
+
 /*
 func fsm_setTimeStamp(btn_floor int,btn_type Button){
 	if requests_timeStamp[btn_floor][btn_type] == 0{
-		requests_timeStamp[btn_floor][btn_type] = getActiveTime()
+		requests_timeStamp[btn_floor][btn_type] = GetActiveTime()
 	}
 }
 

@@ -17,12 +17,12 @@ var isMaster bool
 func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallsCh chan [2]int, errorCh chan int) {
 	master_elev := <-localStatusCh
 	update_Elevators_online(master_elev)
-	msgToNetwork := make(chan Network.UdpMessage)
-	msgFromNetwork := make(chan Network.UdpMessage)
+	msgToNetwork := make(chan Network.UdpMessage, 5)
+	msgFromNetwork := make(chan Network.UdpMessage, 5)
 	updateElevsCh := make(chan Elev_control.Elevator)
 	isMasterCh := make(chan bool)
 	sendOrderCh := make(chan Network.UdpMessage)
-	receiveBtnCallsCh := make(chan [2]int)
+	receiveBtnCallsCh := make(chan [2]int, 5)
 
 	Network.Init_udp(msgToNetwork, msgFromNetwork, isMasterCh)
 	go Network.MH_HandleIncomingMsg(msgFromNetwork, updateElevsCh, receiveBtnCallsCh)
@@ -30,6 +30,7 @@ func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallsCh chan [2]i
 	go update_btnCall_run_costFunction(receiveBtnCallsCh, sendOrderCh)
 	go update_All_elevs(updateElevsCh)
 	go checkForError(errorCh)
+	go check_elevsIdleAtFloor()
 	for {
 		isMaster = <-isMasterCh
 		delete_All_elevs()
@@ -52,29 +53,41 @@ func update_All_elevs(updateElevsCh chan Elev_control.Elevator) {
 }
 
 func update_btnCall_run_costFunction(receiveBtnCallsCh chan [2]int, sendOrderCh chan Network.UdpMessage) {
+	handleOrderAgainCh := make(chan [2]int)
+	go checkTimeStamps(handleOrderAgainCh)
+	var oldCall bool
+	var call [2]int
 	for {
-		newCall := <-receiveBtnCallsCh
-		if update_btnCalls(newCall) { //Hvis det er en ny ordre
+		oldCall = false
+		select {
+		case call = <-receiveBtnCallsCh:
+			break
+		case call = <-handleOrderAgainCh:
+			oldCall = true
+		}
+		if update_btnCalls(call) || oldCall { //Hvis det er en ny ordre
 			//OBS!!: Index verdi kan være -1. Må lage funksjonalitet for dette senere.
-			index_elev := cost_function(newCall[0], Elev_control.Button(newCall[1]))
+			index_elev := cost_function(call[0], Elev_control.Button(call[1]))
 			for index_elev == -1 {
 				fmt.Println("Fant ingen heiser lett tilgjengelig. Prøver på nytt")
 				time.Sleep(500 * time.Millisecond)
-				index_elev = cost_function(newCall[0], Elev_control.Button(newCall[1]))
+				index_elev = cost_function(call[0], Elev_control.Button(call[1]))
 			}
 			elev_ID := Elevators_online[index_elev].Elev_ID
 			fmt.Printf("%+v", elev_ID)
-			Network.MH_send_new_order(elev_ID, newCall, sendOrderCh)
+			Network.MH_send_new_order(elev_ID, call, sendOrderCh)
 			//distribute_All_btn_calls. Kan gjøres gjennom samme channel
 		}
 	}
 }
 
-func checkForError(errorCh chan int){
-	var error int
+func checkForError(errorCh chan int) {
+	var err int
 	for {
-		error = <- errorCh
-		fmt.Println("Error has occured")
+		err = <-errorCh
+		if err == 1 {
+			fmt.Println("Error has occured")
+		}
 		//Master: Fjern denne heisen fra Elevators_online inntil den er operatibel igjen.
 		//Kjør cost_function på nytt for All_btn_calls
 	}

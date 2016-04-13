@@ -18,7 +18,7 @@ type Elevator struct {
 //var requests_timeStamp [4][3]int64 //Setter timeStamp når en ordre aktiveres.
 
 var (
-	elevator Elevator
+	elevator      Elevator
 	lastFloorTime int64
 )
 
@@ -81,10 +81,10 @@ func checkElevMoving(errorCh chan int){
 	var errorTime int64
 	var timeNow int64
 	errorTime = 6
-	for{
-		if elevator.Dir != D_Idle{
-			timeNow = getActiveTime()
-			if lastFloorTime - timeNow > errorTime{
+	for {
+		if elevator.Dir != D_Idle {
+			timeNow = GetActiveTime()
+			if lastFloorTime-timeNow > errorTime {
 				errorCh <- 1
 			}
 		}
@@ -93,11 +93,11 @@ func checkElevMoving(errorCh chan int){
 
 /*func review_timeStamps(errorCh chan int){
 	var errorTime int64
-	errorTime = 
+	errorTime =
 	for{
 		timeNow := getActiveTime()
 		for _,timeStamp in range requests_timeStamp{
-			if 
+			if
 		}
 	}
 }

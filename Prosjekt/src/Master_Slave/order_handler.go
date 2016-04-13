@@ -16,13 +16,18 @@ func cost_function(btn_floor int, btn_type Elev_control.Button) int {
 	for i, elev := range Elevators_online {
 		floors_between = 0
 		time_to_handle = 0
+		if elev.Floor == btn_floor {
+			if elev.Behaviour == Elev_control.EB_Idle || elev.Behaviour == Elev_control.EB_DoorOpen {
+				return i
+			}
+		}
 		switch elev.Dir {
 		case Elev_control.D_Down:
 			if btn_type == Elev_control.B_HallUp {
 				floors_between += elev.Floor + btn_floor
-			} else {//B_HallDown
+			} else { //B_HallDown
 				if elev.Floor <= btn_floor { //Vanskelig å regne ut tid, siden så langt unna
-					floors_between = 100
+					floors_between = 10
 					break
 				}
 				floors_between += elev.Floor - btn_floor
@@ -32,7 +37,7 @@ func cost_function(btn_floor int, btn_type Elev_control.Button) int {
 				return i
 			} else if elev.Floor > btn_floor {
 				floors_between += elev.Floor - btn_floor
-			} else {//elev.Floor < btn_floor
+			} else { //elev.Floor < btn_floor
 				floors_between += btn_floor - elev.Floor
 			}
 		case Elev_control.D_Up:
@@ -40,7 +45,7 @@ func cost_function(btn_floor int, btn_type Elev_control.Button) int {
 				floors_between += 6 - elev.Floor - btn_floor
 			} else {
 				if elev.Floor >= btn_floor { //Vanskelig å regne ut tid, siden så langt unna
-					floors_between = 100
+					floors_between = 10
 					break
 				}
 				floors_between += btn_floor - elev.Floor

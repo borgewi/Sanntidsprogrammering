@@ -22,7 +22,7 @@ const (
 func main() {
 	Driver.ElevInit()
 	localStatusCh := make(chan Elev_control.Elevator)
-	sendBtnCallsCh := make(chan [2]int)
+	sendBtnCallsCh := make(chan [2]int, 5)
 	errorCh := make(chan int)
 
 	go Elev_control.Run_Elevator(localStatusCh, sendBtnCallsCh, errorCh)

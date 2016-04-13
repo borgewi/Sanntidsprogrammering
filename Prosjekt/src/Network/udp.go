@@ -12,19 +12,19 @@ import (
 const MSGsize = 512
 const masterPort = 47838
 const slavePort = 47839
+
 //var lAddr *net.UDPAddr //Local address
 //var bAddr *net.UDPAddr //Broadcast address
 
 type UdpMessage struct {
-	Data 		Elev_control.Elevator
-	Length 		int //length of received data, in #bytes // N/A for sending
-	Order_ID 	int64
-	Order 		[2]int
-	Btn_calls	[4][2]bool
+	Data      Elev_control.Elevator
+	Length    int //length of received data, in #bytes // N/A for sending
+	Order_ID  int64
+	Order     [2]int
+	Btn_calls [4][2]bool
 }
 
-
-func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool){
+func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool) {
 	alive_port := "13579"
 	my_IP := GetLocalIP()
 	fmt.Println("Lokal ip_addresse: \n", my_IP)
@@ -32,27 +32,27 @@ func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool
 	go udpSendAlive(alive_port)
 	go udpRecvAlive(alive_port, peerListLocalCh)
 
-	msgToNetwork_master := make(chan UdpMessage)
-	msgToNetwork_slave := make(chan UdpMessage)
-	msgFromNetwork_master := make(chan UdpMessage)
-	msgFromNetwork_slave := make(chan UdpMessage)
+	msgToNetwork_master := make(chan UdpMessage, 5)
+	msgToNetwork_slave := make(chan UdpMessage, 5)
+	msgFromNetwork_master := make(chan UdpMessage, 5)
+	msgFromNetwork_slave := make(chan UdpMessage, 5)
 	go transmitMsg(masterPort, msgToNetwork_master)
 	go transmitMsg(slavePort, msgToNetwork_slave)
 	go receiveMsg(masterPort, msgFromNetwork_master)
 	go receiveMsg(slavePort, msgFromNetwork_slave)
 
-	go func(){
+	go func() {
 		isMaster := false
 		for {
 			select {
-			case msg := <- msgFromNetwork_slave:
+			case msg := <-msgFromNetwork_slave:
 				fmt.Println("case: msgFromNetwork_slave")
-				if isMaster{
+				if isMaster {
 					msgFromNetwork <- msg
 				}
-			case msg := <- msgFromNetwork_master:
+			case msg := <-msgFromNetwork_master:
 				fmt.Println("case: msgFromNetwork_master")
-				if !isMaster{
+				if !isMaster {
 					msgFromNetwork <- msg
 				}
 			case msg := <-msgToNetwork:
@@ -62,18 +62,18 @@ func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool
 				} else {
 					msgToNetwork_slave <- msg
 				}
-			case new_peer_list := <- peerListLocalCh:
+			case new_peer_list := <-peerListLocalCh:
 				fmt.Println("case: peerListLocalCh")
 				highest_IP := my_IP
 				for _, IP := range new_peer_list {
-					if highest_IP< IP{
+					if highest_IP < IP {
 						highest_IP = IP
 					}
 				}
-				if my_IP == highest_IP{
+				if my_IP == highest_IP {
 					isMaster = true
 					isMasterCh <- true
-				}else{
+				} else {
 					isMaster = false
 					isMasterCh <- false
 				}
@@ -83,7 +83,7 @@ func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool
 	}()
 }
 
-func receiveMsg(port int, messageFromNetwork chan UdpMessage){
+func receiveMsg(port int, messageFromNetwork chan UdpMessage) {
 	bAddr, err := net.ResolveUDPAddr("udp4", "255.255.255.255:"+strconv.Itoa(port))
 	broadcastConn, err := net.ListenUDP("udp4", bAddr)
 
@@ -97,7 +97,7 @@ func receiveMsg(port int, messageFromNetwork chan UdpMessage){
 	if err != nil {
 		broadcastConn.Close()
 	}
-	
+
 	for {
 		//receive
 		buf := make([]byte, MSGsize)
@@ -111,14 +111,13 @@ func receiveMsg(port int, messageFromNetwork chan UdpMessage){
 		var msg UdpMessage
 		DecodeMessage(&msg, buf)
 		//shove on channel
-		messageFromNetwork <- msg		
+		messageFromNetwork <- msg
 	}
 }
 
-
-func transmitMsg(port int, messageToNetwork chan UdpMessage){
+func transmitMsg(port int, messageToNetwork chan UdpMessage) {
 	bAddr, _ := net.ResolveUDPAddr("udp4", "255.255.255.255:"+strconv.Itoa(port))
-	broadcastConn, _ := net.DialUDP("udp4",nil, bAddr)
+	broadcastConn, _ := net.DialUDP("udp4", nil, bAddr)
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -158,23 +157,20 @@ func DecodeMessage(msg *UdpMessage, arr []byte) {
 }
 
 func GetLocalIP() string {
-    addrs, err := net.InterfaceAddrs()
-    if err != nil {
-        return ""
-    }
-    for _, address := range addrs {
-        // check the address type and if it is not a loopback the display it
-        if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-            if ipnet.IP.To4() != nil {
-                return ipnet.IP.String()
-            }
-        }
-    }
-    return ""
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return ""
+	}
+	for _, address := range addrs {
+		// check the address type and if it is not a loopback the display it
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+	return ""
 }
-
-
-
 
 /*
 channels:
@@ -184,7 +180,7 @@ channels:
 
 func Init(msgToNetwork chan UdpMessage, msgFromNetwork chan UdpMessage, isMaster chan ??){
 
-	
+
 
 	msgToNetwork_master := make(chan UdpMessage)
 	msgToNetwork_slave := make(chan UdpMessage)
@@ -199,7 +195,7 @@ func Init(msgToNetwork chan UdpMessage, msgFromNetwork chan UdpMessage, isMaster
 			msg from slaves:
 				if master
 					send to user
-				else 
+				else
 					ignore
 
 			msg from master
@@ -248,12 +244,6 @@ func transmitMsg(port string, messageToNetwork chan UdpMessage){
 
 
 */
-
-
-
-
-
-
 
 /*
 func InitializeConnection(localPort, broadcastPort int) (lConn, bConn *net.UDPConn, lAddr, bAddr *net.UDPAddr) {
