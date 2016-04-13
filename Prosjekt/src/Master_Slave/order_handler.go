@@ -20,7 +20,7 @@ func cost_function(btn_floor int, btn_type Elev_control.Button) int {
 		case Elev_control.D_Down:
 			if btn_type == Elev_control.B_HallUp {
 				floors_between += elev.Floor + btn_floor
-			} else {
+			} else {//B_HallDown
 				if elev.Floor <= btn_floor { //Vanskelig å regne ut tid, siden så langt unna
 					floors_between = 100
 					break
@@ -32,7 +32,7 @@ func cost_function(btn_floor int, btn_type Elev_control.Button) int {
 				return i
 			} else if elev.Floor > btn_floor {
 				floors_between += elev.Floor - btn_floor
-			} else {
+			} else {//elev.Floor < btn_floor
 				floors_between += btn_floor - elev.Floor
 			}
 		case Elev_control.D_Up:
@@ -50,6 +50,7 @@ func cost_function(btn_floor int, btn_type Elev_control.Button) int {
 		time_to_handle = calculate_time(floors_between)
 		if time_to_handle < best_time {
 			i_best_time = i
+			best_time = time_to_handle
 		}
 	}
 	//Få med elev.Behaviour
