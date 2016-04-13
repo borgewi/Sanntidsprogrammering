@@ -3,7 +3,7 @@ package Master_Slave
 import (
 	"Driver"
 	"Elev_control"
-	//"time"
+	"time"
 	//"fmt"
 )
 
@@ -40,6 +40,31 @@ func update_btnCalls(newCall [2]int) bool {
 	All_btn_calls[newCall[0]][newCall[1]] = true
 	return true
 }
+
+func check_elevsIdleAtFloor(){
+	for{
+		time.Sleep(500 * time.Millisecond)
+		if isMaster{
+			for _,elev := range Elevators_online{
+				if elev.Behaviour == Elev_control.EB_Idle{
+					All_btn_calls[elev.Floor][0] = false
+					All_btn_calls[elev.Floor][1] = false
+				} else if elev.Behaviour == Elev_control.EB_DoorOpen{
+					switch(elev.Dir){
+					case Elev_control.D_Idle:
+						All_btn_calls[elev.Floor][0] = false
+						All_btn_calls[elev.Floor][1] = false
+					case Elev_control.D_Down:
+						All_btn_calls[elev.Floor][0] = false
+					case Elev_control.D_Up:
+						All_btn_calls[elev.Floor][1] = false
+					}
+				}
+			}
+		}
+	}
+}
+
 
 //All_btn_calls må oppdateres når en heis stopper i en etasje.
 //Fjerne alle btn_calls som er i samme retning som den heisen.

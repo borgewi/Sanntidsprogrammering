@@ -7,6 +7,7 @@ import (
 	//"encoding/json"
 )
 
+//Gjøre om denne til å styres av interne kommandoer OG når all_btn_calls mottas.
 func setAllLights(e Elevator) {
 	for floor := 0; floor < Driver.NUMFLOORS; floor++ {
 		for btn := 0; btn < Driver.NUMBUTTONS; btn++ {
@@ -19,6 +20,7 @@ func fsm_onInitBetweenFloors() {
 	Driver.ElevSetMotorDirection(int(D_Down))
 	elevator.Dir = D_Down
 	elevator.Behaviour = EB_Moving
+	lastFloorTime = getActiveTime()
 	for Driver.ElevGetFloorSensorSignal() == -1 {
 	}
 	Driver.ElevSetMotorDirection(int(D_Idle))
@@ -42,13 +44,16 @@ func fsm_onNewActiveRequest(btn_floor int, btn_type Button) {
 			timer_start(3000 * time.Millisecond)
 		} else {
 			elevator.Requests[btn_floor][btn_type] = true
+			//fsm_setTimeStamp(btn_floor,btn_type)
 		}
 		break
 	case EB_Moving:
 		elevator.Requests[btn_floor][btn_type] = true
+		//fsm_setTimeStamp(btn_floor,btn_type)
 		break
 	case EB_Idle:
 		elevator.Requests[btn_floor][btn_type] = true
+		//fsm_setTimeStamp(btn_floor,btn_type)
 		elevator.Dir = requests_chooseDirection(elevator)
 		if elevator.Dir == D_Idle {
 			Driver.ElevSetDoorLight(true)
@@ -58,6 +63,7 @@ func fsm_onNewActiveRequest(btn_floor int, btn_type Button) {
 		} else {
 			Driver.ElevSetMotorDirection(int(elevator.Dir))
 			elevator.Behaviour = EB_Moving
+			lastFloorTime = getActiveTime()
 		}
 		break
 	}
@@ -84,6 +90,8 @@ func fsm_onFloorArrival(newFloor int) {
 			timer_start(3000 * time.Millisecond)
 			setAllLights(elevator)
 			elevator.Behaviour = EB_DoorOpen
+			//fsm_deleteTimeStamp(newFloor)
+			lastFloorTime = getActiveTime()
 		}
 		break
 	default:
@@ -101,6 +109,7 @@ func fsm_onDoorTimeout() {
 			elevator.Behaviour = EB_Idle
 		} else {
 			elevator.Behaviour = EB_Moving
+			lastFloorTime = getActiveTime()
 		}
 		break
 	default:
@@ -127,3 +136,32 @@ func Fsm_addOrder(Order [2]int, Order_ID int64) {
 		fmt.Println("Feil Order_ID")
 	}
 }
+/*
+func fsm_setTimeStamp(btn_floor int,btn_type Button){
+	if requests_timeStamp[btn_floor][btn_type] == 0{
+		requests_timeStamp[btn_floor][btn_type] = getActiveTime()
+	}
+}
+
+func fsm_deleteTimeStamp(newFloor int){
+	switch(elevator.Dir){
+	case D_Down:
+		requests_timeStamp[newFloor][B_HallDown] = 0
+		requests_timeStamp[newFloor][B_Cab] = 0
+		if newFloor == 0{
+			requests_timeStamp[newFloor][B_HallUp] = 0
+		}
+	case D_Up:
+		requests_timeStamp[newFloor][B_HallUp] = 0
+		requests_timeStamp[newFloor][B_Cab] = 0
+		if newFloor == Driver.NUMFLOORS-1{
+			requests_timeStamp[newFloor][B_HallDown] = 0
+		}
+	case D_Idle:
+		requests_timeStamp[newFloor][B_HallDown] = 0
+		requests_timeStamp[newFloor][B_HallUp] = 0
+		requests_timeStamp[newFloor][B_Cab] = 0
+	}
+}
+
+*/

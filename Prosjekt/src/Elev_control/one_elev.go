@@ -15,11 +15,14 @@ type Elevator struct {
 	//doorOpenDuration_s float
 }
 
+//var requests_timeStamp [4][3]int64 //Setter timeStamp når en ordre aktiveres.
+
 var (
 	elevator Elevator
+	lastFloorTime int64
 )
 
-func Run_Elevator(localStatusCh chan Elevator, sendBtnCallsCh chan [2]int) {
+func Run_Elevator(localStatusCh chan Elevator, sendBtnCallsCh chan [2]int, errorCh chan int) {
 	//var elevator2 Elevator
 
 	//Init elev_state
@@ -35,6 +38,9 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallsCh chan [2]int) {
 	var prev_button [Driver.NUMFLOORS][Driver.NUMBUTTONS]int
 	var prev_floor int
 	prev_floor = Driver.ElevGetFloorSensorSignal()
+
+	go checkElevMoving(errorCh)
+
 	for running {
 		// Request button
 		for f := 0; f < Driver.NUMFLOORS; f++ {
@@ -71,6 +77,31 @@ func send_status(localStatusCh chan Elevator) {
 	}
 }
 
+func checkElevMoving(errorCh chan int){
+	var errorTime int64
+	var timeNow int64
+	errorTime = 6
+	for{
+		if elevator.Dir != D_Idle{
+			timeNow = getActiveTime()
+			if lastFloorTime - timeNow > errorTime{
+				errorCh <- 1
+			}
+		}
+	}
+}
+
+/*func review_timeStamps(errorCh chan int){
+	var errorTime int64
+	errorTime = 
+	for{
+		timeNow := getActiveTime()
+		for _,timeStamp in range requests_timeStamp{
+			if 
+		}
+	}
+}
+*/
 func PrintElev(elev Elevator) {
 	fmt.Println("")
 	fmt.Println("Floor: ", elev.Floor)

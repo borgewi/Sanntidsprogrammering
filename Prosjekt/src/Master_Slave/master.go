@@ -14,7 +14,7 @@ var isMaster bool
 
 //const extern_Addr = "129.241.187.255" + ":13337"
 
-func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallsCh chan [2]int) {
+func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallsCh chan [2]int, errorCh chan int) {
 	master_elev := <-localStatusCh
 	update_Elevators_online(master_elev)
 	msgToNetwork := make(chan Network.UdpMessage)
@@ -29,6 +29,7 @@ func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallsCh chan [2]i
 	go Network.MH_HandleOutgoingMsg(msgToNetwork, sendOrderCh, localStatusCh, updateElevsCh, sendBtnCallsCh, receiveBtnCallsCh)
 	go update_btnCall_run_costFunction(receiveBtnCallsCh, sendOrderCh)
 	go update_All_elevs(updateElevsCh)
+	go checkForError(errorCh)
 	for {
 		isMaster = <-isMasterCh
 		delete_All_elevs()
@@ -64,7 +65,18 @@ func update_btnCall_run_costFunction(receiveBtnCallsCh chan [2]int, sendOrderCh 
 			elev_ID := Elevators_online[index_elev].Elev_ID
 			fmt.Printf("%+v", elev_ID)
 			Network.MH_send_new_order(elev_ID, newCall, sendOrderCh)
+			//distribute_All_btn_calls. Kan gjøres gjennom samme channel
 		}
+	}
+}
+
+func checkForError(errorCh chan int){
+	var error int
+	for {
+		error = <- errorCh
+		fmt.Println("Error has occured")
+		//Master: Fjern denne heisen fra Elevators_online inntil den er operatibel igjen.
+		//Kjør cost_function på nytt for All_btn_calls
 	}
 }
 
