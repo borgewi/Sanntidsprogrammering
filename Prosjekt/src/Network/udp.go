@@ -99,18 +99,14 @@ func receiveMsg(port int, messageFromNetwork chan UdpMessage) {
 	}
 
 	for {
-		//receive
 		buf := make([]byte, MSGsize)
 		n, _, err := broadcastConn.ReadFromUDP(buf)
 		if err != nil {
 			broadcastConn.Close()
 		}
 		buf = buf[:n]
-		//deadline??
-		//decode
 		var msg UdpMessage
 		DecodeMessage(&msg, buf)
-		//shove on channel
 		messageFromNetwork <- msg
 	}
 }
@@ -125,21 +121,9 @@ func transmitMsg(port int, messageToNetwork chan UdpMessage) {
 			broadcastConn.Close()
 		}
 	}()
-
-	//if err != nil {
-	//	broadcastConn.Close()
-	//}
-
 	for {
-		//read from chan
 		msg := <-messageToNetwork
-		//encode and write to network
-		//_, err := broadcastConn.WriteToUDP(EncodeMessage(msg), bAddr)
 		broadcastConn.Write(EncodeMessage(msg))
-		//if err != nil {
-		//	fmt.Println("Error: udpTransmitServer: could not write\n")
-		//	panic(err)
-		//}
 	}
 }
 

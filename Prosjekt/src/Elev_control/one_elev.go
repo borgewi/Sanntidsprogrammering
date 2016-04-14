@@ -21,9 +21,10 @@ var (
 	elevator      Elevator
 	lastFloorTime int64
 	allExtBtns    [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]bool
+	isOnline      bool
 )
 
-func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiveAllBtnCallsCh chan [4][2]bool, errorCh chan int) {
+func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiveAllBtnCallsCh chan [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]bool, errorCh chan int) {
 	//var elevator2 Elevator
 
 	//Init elev_state
@@ -31,8 +32,9 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiv
 		fsm_onInitBetweenFloors()
 	}
 	fsm_elevatorUninitialized()
-	fmt.Printf("%+v", elevator.Elev_ID)
-	fmt.Println("")
+	fmt.Println("Elev ID: ", elevator.Elev_ID)
+	//fmt.Printf("%+v", elevator.Elev_ID)
+	//fmt.Println("")
 	go send_status(localStatusCh)
 
 	running := true
@@ -81,28 +83,19 @@ func send_status(localStatusCh chan Elevator) {
 func checkElevMoving(errorCh chan int) {
 	var errorTime int64
 	var timeNow int64
-	errorTime = 6
+	errorTime = 8
+	err := 1
 	for {
-		if elevator.Dir != D_Idle {
-			timeNow = GetActiveTime()
-			if lastFloorTime-timeNow > errorTime {
-				errorCh <- 1
+		time.Sleep(1 * time.Second)
+		if elevator.Behaviour != EB_Idle {
+			timeNow = time.Now().Unix()
+			if timeNow-lastFloorTime > errorTime {
+				errorCh <- err
 			}
 		}
 	}
 }
 
-/*func review_timeStamps(errorCh chan int){
-	var errorTime int64
-	errorTime =
-	for{
-		timeNow := getActiveTime()
-		for _,timeStamp in range requests_timeStamp{
-			if
-		}
-	}
-}
-*/
 func PrintElev(elev Elevator) {
 	fmt.Println("")
 	fmt.Println("Floor: ", elev.Floor)

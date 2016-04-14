@@ -42,14 +42,14 @@ func setTimeStamp(btn_floor int, btn_type int) {
 func checkTimeStamps(handleOrderAgainCh chan [2]int) {
 	var errorTime int64
 	var timeNow int64
-	errorTime = 15
+	errorTime = 10
 	var order [2]int
 	for {
 		if !isMaster {
 			time.Sleep(10000 * time.Millisecond)
 		} else {
-			timeNow = time.Now().Unix()
 			time.Sleep(1500 * time.Millisecond)
+			timeNow = time.Now().Unix()
 			fmt.Println("")
 			fmt.Printf("%+v", btn_calls_timeStamp)
 			fmt.Println("")

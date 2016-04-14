@@ -23,7 +23,6 @@ func setAllLights() {
 func updateAllExtLights(receiveAllBtnCallsCh chan [4][2]bool) {
 	for {
 		allExtBtns = <-receiveAllBtnCallsCh
-		fmt.Println("Mottar allExtBtns fra receiveAllBtnCallsCh")
 		setAllLights()
 	}
 }
@@ -32,7 +31,7 @@ func fsm_onInitBetweenFloors() {
 	Driver.ElevSetMotorDirection(int(D_Down))
 	elevator.Dir = D_Down
 	elevator.Behaviour = EB_Moving
-	lastFloorTime = GetActiveTime()
+	lastFloorTime = time.Now().Unix()
 	for Driver.ElevGetFloorSensorSignal() == -1 {
 	}
 	Driver.ElevSetMotorDirection(int(D_Idle))
@@ -75,7 +74,7 @@ func fsm_onNewActiveRequest(btn_floor int, btn_type Button) {
 		} else {
 			Driver.ElevSetMotorDirection(int(elevator.Dir))
 			elevator.Behaviour = EB_Moving
-			lastFloorTime = GetActiveTime()
+			lastFloorTime = time.Now().Unix()
 		}
 		break
 	}
@@ -93,6 +92,7 @@ func fsm_SendNewOrderToMaster(btn_floor int, btn_type Button, sendBtnCallCh chan
 func fsm_onFloorArrival(newFloor int) {
 	elevator.Floor = newFloor
 	Driver.ElevSetFloorIndicator(newFloor)
+	//fsm_checkExtRequestsStillActive() //Skal vi ha med denne?
 	switch elevator.Behaviour {
 	case EB_Moving:
 		if requests_shouldStop(elevator) {
@@ -102,8 +102,7 @@ func fsm_onFloorArrival(newFloor int) {
 			timer_start(3000 * time.Millisecond)
 			setAllLights()
 			elevator.Behaviour = EB_DoorOpen
-			//fsm_deleteTimeStamp(newFloor)
-			lastFloorTime = GetActiveTime()
+			lastFloorTime = time.Now().Unix()
 		}
 		break
 	default:
@@ -121,7 +120,7 @@ func fsm_onDoorTimeout() {
 			elevator.Behaviour = EB_Idle
 		} else {
 			elevator.Behaviour = EB_Moving
-			lastFloorTime = GetActiveTime()
+			lastFloorTime = time.Now().Unix()
 		}
 		break
 	default:
@@ -149,32 +148,16 @@ func Fsm_addOrder(Order [2]int, Order_ID int64) {
 	}
 }
 
-/*
-func fsm_setTimeStamp(btn_floor int,btn_type Button){
-	if requests_timeStamp[btn_floor][btn_type] == 0{
-		requests_timeStamp[btn_floor][btn_type] = GetActiveTime()
+//Skal vi ha med denne?
+func fsm_checkExtRequestsStillActive() {
+	for i, k := range elevator.Requests {
+		for j, _ := range k {
+			if j != 2 && elevator.Requests[i][j] {
+				if !allExtBtns[i][j] {
+					//Bestillingen er allerede utført av noen andre
+					elevator.Requests[i][j] = false
+				}
+			}
+		}
 	}
 }
-
-func fsm_deleteTimeStamp(newFloor int){
-	switch(elevator.Dir){
-	case D_Down:
-		requests_timeStamp[newFloor][B_HallDown] = 0
-		requests_timeStamp[newFloor][B_Cab] = 0
-		if newFloor == 0{
-			requests_timeStamp[newFloor][B_HallUp] = 0
-		}
-	case D_Up:
-		requests_timeStamp[newFloor][B_HallUp] = 0
-		requests_timeStamp[newFloor][B_Cab] = 0
-		if newFloor == Driver.NUMFLOORS-1{
-			requests_timeStamp[newFloor][B_HallDown] = 0
-		}
-	case D_Idle:
-		requests_timeStamp[newFloor][B_HallDown] = 0
-		requests_timeStamp[newFloor][B_HallUp] = 0
-		requests_timeStamp[newFloor][B_Cab] = 0
-	}
-}
-
-*/
