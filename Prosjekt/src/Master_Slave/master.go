@@ -58,25 +58,28 @@ func update_btnCall_run_costFunction(receiveBtnCallsCh chan [2]int, sendOrderCh 
 	var oldCall bool
 	var call [2]int
 	for {
-		oldCall = false
-		select {
-		case call = <-receiveBtnCallsCh:
-			break
-		case call = <-handleOrderAgainCh:
-			oldCall = true
-		}
-		if update_btnCalls(call) || oldCall { //Hvis det er en ny ordre
-			//OBS!!: Index verdi kan være -1. Må lage funksjonalitet for dette senere.
-			index_elev := cost_function(call[0], Elev_control.Button(call[1]))
-			for index_elev == -1 {
-				fmt.Println("Fant ingen heiser lett tilgjengelig. Prøver på nytt")
-				time.Sleep(500 * time.Millisecond)
-				index_elev = cost_function(call[0], Elev_control.Button(call[1]))
+		if isMaster {
+			oldCall = false
+			select {
+			case call = <-receiveBtnCallsCh:
+				break
+			case call = <-handleOrderAgainCh:
+				oldCall = true
+				fmt.Println("oldCall: ", oldCall)
 			}
-			elev_ID := Elevators_online[index_elev].Elev_ID
-			fmt.Printf("%+v", elev_ID)
-			Network.MH_send_new_order(elev_ID, call, sendOrderCh)
-			//distribute_All_btn_calls. Kan gjøres gjennom samme channel
+			if update_btnCalls(call) || oldCall { //Hvis det er en ny ordre
+				//OBS!!: Index verdi kan være -1. Må lage funksjonalitet for dette senere.
+				index_elev := cost_function(call[0], Elev_control.Button(call[1]))
+				for index_elev == -1 {
+					fmt.Println("Fant ingen heiser lett tilgjengelig. Prøver på nytt")
+					time.Sleep(500 * time.Millisecond)
+					index_elev = cost_function(call[0], Elev_control.Button(call[1]))
+				}
+				elev_ID := Elevators_online[index_elev].Elev_ID
+				fmt.Printf("%+v", elev_ID)
+				Network.MH_send_new_order(elev_ID, call, sendOrderCh)
+				//distribute_All_btn_calls. Kan gjøres gjennom samme channel
+			}
 		}
 	}
 }

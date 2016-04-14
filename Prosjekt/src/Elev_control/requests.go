@@ -96,27 +96,7 @@ func requests_shouldStop(e Elevator) bool {
 
 func requests_clearAtCurrentFloor(e Elevator) Elevator {
 	e.Requests[e.Floor][B_Cab] = false
-	switch e.Dir {
-	case D_Up:
-		e.Requests[e.Floor][B_HallUp] = false
-		if !requests_above(e) {
-			e.Requests[e.Floor][B_HallDown] = false
-		}
-		break
-
-	case D_Down:
-		e.Requests[e.Floor][B_HallDown] = false
-		if !requests_below(e) {
-			e.Requests[e.Floor][B_HallUp] = false
-		}
-		break
-
-	case D_Idle:
-	default:
-		e.Requests[e.Floor][B_HallUp] = false
-		e.Requests[e.Floor][B_HallDown] = false
-		break
-	}
-
+	e.Requests[e.Floor][B_HallUp] = false
+	e.Requests[e.Floor][B_HallDown] = false
 	return e
 }

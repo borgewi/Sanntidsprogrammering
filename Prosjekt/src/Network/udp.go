@@ -46,24 +46,24 @@ func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool
 		for {
 			select {
 			case msg := <-msgFromNetwork_slave:
-				fmt.Println("case: msgFromNetwork_slave")
+				//fmt.Println("case: msgFromNetwork_slave")
 				if isMaster {
 					msgFromNetwork <- msg
 				}
 			case msg := <-msgFromNetwork_master:
-				fmt.Println("case: msgFromNetwork_master")
+				//fmt.Println("case: msgFromNetwork_master")
 				if !isMaster {
 					msgFromNetwork <- msg
 				}
 			case msg := <-msgToNetwork:
-				fmt.Println("case: msgToNetwork")
+				//fmt.Println("case: msgToNetwork")
 				if isMaster {
 					msgToNetwork_master <- msg
 				} else {
 					msgToNetwork_slave <- msg
 				}
 			case new_peer_list := <-peerListLocalCh:
-				fmt.Println("case: peerListLocalCh")
+				//fmt.Println("case: peerListLocalCh")
 				highest_IP := my_IP
 				for _, IP := range new_peer_list {
 					if highest_IP < IP {

@@ -35,15 +35,15 @@ func MH_HandleOutgoingMsg(msgToNetwork, sendOrderCh chan UdpMessage, localStatus
 }
 
 func MH_HandleIncomingMsg(msgFromNetwork chan UdpMessage, updateElevsCh chan Elev_control.Elevator, receiveBtnCallsCh chan [2]int) {
-	var elev Elev_control.Elevator
+	//var elev Elev_control.Elevator
 	var msg UdpMessage
 	for {
-		msg = <-msgFromNetwork
-		elev = msg.Data
+		msg = <-msgFromNetwork //msg.Data er elev
+		//elev = msg.Data
 		switch msg.Order_ID {
 		case 0:
 			updateElevsCh <- msg.Data
-			Elev_control.PrintElev(elev)
+			//Elev_control.PrintElev(elev)
 			fmt.Println("")
 			break
 		case 1:

@@ -73,11 +73,10 @@ func send_status(localStatusCh chan Elevator) {
 	for {
 		time.Sleep(1000 * time.Millisecond)
 		localStatusCh <- elevator
-		fmt.Println("Status sendt fra Elev_control")
 	}
 }
 
-func checkElevMoving(errorCh chan int){
+func checkElevMoving(errorCh chan int) {
 	var errorTime int64
 	var timeNow int64
 	errorTime = 6

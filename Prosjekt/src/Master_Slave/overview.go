@@ -3,7 +3,7 @@ package Master_Slave
 import (
 	"Driver"
 	"Elev_control"
-	//"fmt"
+	"fmt"
 	"time"
 )
 
@@ -44,24 +44,34 @@ func update_btnCalls(newCall [2]int) bool {
 }
 
 func setTimeStamp(btn_floor int, btn_type int) {
-	btn_calls_timeStamp[btn_floor][btn_type] = Elev_control.GetActiveTime()
+	btn_calls_timeStamp[btn_floor][btn_type] = time.Now().Unix() //Unixtime 2016 01/01/00
+	fmt.Println("Satte timeStamp")
 }
 
 func checkTimeStamps(handleOrderAgainCh chan [2]int) {
 	var errorTime int64
+	var timeNow int64
 	errorTime = 15
 	var order [2]int
 	for {
-		time.Sleep(1500 * time.Millisecond)
-		timeNow := Elev_control.GetActiveTime()
-		for i, k := range btn_calls_timeStamp {
-			for j, timeStamp := range k {
-				if timeStamp != 0 {
-					if timeNow-timeStamp > errorTime {
-						order[0] = i
-						order[1] = j
-						handleOrderAgainCh <- order
-						setTimeStamp(i, j)
+		if !isMaster {
+			time.Sleep(10000 * time.Millisecond)
+		} else {
+			timeNow = time.Now().Unix()
+			time.Sleep(1500 * time.Millisecond)
+			fmt.Printf("%+v", timeNow)
+			fmt.Println("")
+			fmt.Printf("%+v", btn_calls_timeStamp)
+			fmt.Println("")
+			for i, k := range btn_calls_timeStamp {
+				for j, timeStamp := range k {
+					if timeStamp != 0 {
+						if timeNow-timeStamp > errorTime {
+							order[0] = i
+							order[1] = j
+							handleOrderAgainCh <- order
+							setTimeStamp(i, j)
+						}
 					}
 				}
 			}
