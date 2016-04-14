@@ -14,7 +14,7 @@ var isMaster bool
 
 //const extern_Addr = "129.241.187.255" + ":13337"
 
-func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallsCh chan [2]int, errorCh chan int) {
+func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallCh chan [2]int, receiveAllBtnCallsCh chan [4][2]bool, errorCh chan int) {
 	master_elev := <-localStatusCh
 	update_Elevators_online(master_elev)
 	msgToNetwork := make(chan Network.UdpMessage, 5)
@@ -23,14 +23,13 @@ func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallsCh chan [2]i
 	isMasterCh := make(chan bool)
 	sendOrderCh := make(chan Network.UdpMessage)
 	receiveBtnCallCh := make(chan [2]int, 5)
-	receiveAllBtnCallsCh := make(chan [4][2]bool, 5)
 
 	Network.Init_udp(msgToNetwork, msgFromNetwork, isMasterCh)
 	go Network.MH_HandleIncomingMsg(msgFromNetwork, updateElevsCh, receiveBtnCallCh, receiveAllBtnCallsCh)
-	go Network.MH_HandleOutgoingMsg(msgToNetwork, sendOrderCh, localStatusCh, updateElevsCh, sendBtnCallsCh, receiveBtnCallCh)
-	go update_btnCall_run_costFunction(receiveBtnCallCh, sendOrderCh)
+	go Network.MH_HandleOutgoingMsg(msgToNetwork, sendOrderCh, localStatusCh, updateElevsCh, sendBtnCallCh, receiveBtnCallCh)
+	go update_btnCall_run_costFunction(receiveBtnCallCh, sendOrderCh, receiveAllBtnCallsCh)
 	go receive_allBtnCalls(receiveAllBtnCallsCh)
-	go distribute_allBtnCalls_Master(sendOrderCh)
+	go distribute_allBtnCalls_Master(sendOrderCh, receiveAllBtnCallsCh)
 	go update_All_elevs(updateElevsCh)
 	go checkForError(errorCh)
 	go check_elevsIdleAtFloor()
@@ -55,7 +54,7 @@ func update_All_elevs(updateElevsCh chan Elev_control.Elevator) {
 	}
 }
 
-func update_btnCall_run_costFunction(receiveBtnCallCh chan [2]int, sendOrderCh chan Network.UdpMessage) {
+func update_btnCall_run_costFunction(receiveBtnCallCh chan [2]int, sendOrderCh chan Network.UdpMessage, receiveAllBtnCallsCh chan [4][2]bool) {
 	handleOrderAgainCh := make(chan [2]int)
 	go checkTimeStamps(handleOrderAgainCh)
 	var oldCall bool
@@ -82,6 +81,7 @@ func update_btnCall_run_costFunction(receiveBtnCallCh chan [2]int, sendOrderCh c
 				fmt.Printf("%+v", elev_ID)
 				Network.MH_send_new_order(elev_ID, call, sendOrderCh)
 				Network.MH_broadcast_all_btn_calls(All_btn_calls, sendOrderCh)
+				receiveAllBtnCallsCh <- All_btn_calls
 			}
 		}
 	}
@@ -94,11 +94,12 @@ func receive_allBtnCalls(receiveAllBtnCallsCh chan [4][2]bool) {
 	}
 }
 
-func distribute_allBtnCalls_Master(sendOrderCh chan Network.UdpMessage) {
+func distribute_allBtnCalls_Master(sendOrderCh chan Network.UdpMessage, receiveAllBtnCallsCh chan [4][2]bool) {
 	for {
 		time.Sleep(1 * time.Second)
 		if isMaster {
 			Network.MH_broadcast_all_btn_calls(All_btn_calls, sendOrderCh)
+			receiveAllBtnCallsCh <- All_btn_calls
 		}
 	}
 }

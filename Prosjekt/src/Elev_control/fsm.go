@@ -8,11 +8,23 @@ import (
 )
 
 //Gjøre om denne til å styres av interne kommandoer OG når all_btn_calls mottas.
-func setAllLights(e Elevator) {
+func setAllLights() {
 	for floor := 0; floor < Driver.NUMFLOORS; floor++ {
 		for btn := 0; btn < Driver.NUMBUTTONS; btn++ {
-			Driver.ElevSetButtonLight(btn, floor, e.Requests[floor][btn])
+			if btn == int(B_Cab) {
+				Driver.ElevSetButtonLight(btn, floor, elevator.Requests[floor][btn])
+			} else {
+				Driver.ElevSetButtonLight(btn, floor, allExtBtns[floor][btn])
+			}
 		}
+	}
+}
+
+func updateAllExtLights(receiveAllBtnCallsCh chan [4][2]bool) {
+	for {
+		allExtBtns = <-receiveAllBtnCallsCh
+		fmt.Println("Mottar allExtBtns fra receiveAllBtnCallsCh")
+		setAllLights()
 	}
 }
 
@@ -26,14 +38,14 @@ func fsm_onInitBetweenFloors() {
 	Driver.ElevSetMotorDirection(int(D_Idle))
 }
 
-func fsm_onRequestButtonPress(btn_floor int, btn_type Button, sendBtnCallsCh chan [2]int) {
+func fsm_onRequestButtonPress(btn_floor int, btn_type Button, sendBtnCallCh chan [2]int) {
 	switch btn_type {
 	case B_Cab:
 		fsm_onNewActiveRequest(btn_floor, btn_type)
 	case B_HallDown:
-		fsm_SendNewOrderToMaster(btn_floor, btn_type, sendBtnCallsCh)
+		fsm_SendNewOrderToMaster(btn_floor, btn_type, sendBtnCallCh)
 	case B_HallUp:
-		fsm_SendNewOrderToMaster(btn_floor, btn_type, sendBtnCallsCh)
+		fsm_SendNewOrderToMaster(btn_floor, btn_type, sendBtnCallCh)
 	}
 }
 
@@ -68,14 +80,14 @@ func fsm_onNewActiveRequest(btn_floor int, btn_type Button) {
 		break
 	}
 
-	setAllLights(elevator)
+	setAllLights()
 }
 
-func fsm_SendNewOrderToMaster(btn_floor int, btn_type Button, sendBtnCallsCh chan [2]int) {
+func fsm_SendNewOrderToMaster(btn_floor int, btn_type Button, sendBtnCallCh chan [2]int) {
 	var newBtnCall [2]int
 	newBtnCall[0] = btn_floor
 	newBtnCall[1] = int(btn_type)
-	sendBtnCallsCh <- newBtnCall
+	sendBtnCallCh <- newBtnCall
 }
 
 func fsm_onFloorArrival(newFloor int) {
@@ -88,7 +100,7 @@ func fsm_onFloorArrival(newFloor int) {
 			Driver.ElevSetDoorLight(true)
 			elevator = requests_clearAtCurrentFloor(elevator)
 			timer_start(3000 * time.Millisecond)
-			setAllLights(elevator)
+			setAllLights()
 			elevator.Behaviour = EB_DoorOpen
 			//fsm_deleteTimeStamp(newFloor)
 			lastFloorTime = GetActiveTime()

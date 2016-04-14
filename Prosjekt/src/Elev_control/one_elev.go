@@ -20,9 +20,10 @@ type Elevator struct {
 var (
 	elevator      Elevator
 	lastFloorTime int64
+	allExtBtns    [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]bool
 )
 
-func Run_Elevator(localStatusCh chan Elevator, sendBtnCallsCh chan [2]int, errorCh chan int) {
+func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiveAllBtnCallsCh chan [4][2]bool, errorCh chan int) {
 	//var elevator2 Elevator
 
 	//Init elev_state
@@ -40,6 +41,7 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallsCh chan [2]int, error
 	prev_floor = Driver.ElevGetFloorSensorSignal()
 
 	go checkElevMoving(errorCh)
+	go updateAllExtLights(receiveAllBtnCallsCh)
 
 	for running {
 		// Request button
@@ -47,7 +49,7 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallsCh chan [2]int, error
 			for b := 0; b < Driver.NUMBUTTONS; b++ {
 				v := Driver.ElevGetButtonSignal(b, f)
 				if v&int(v) != prev_button[f][b] {
-					fsm_onRequestButtonPress(f, Button(b), sendBtnCallsCh)
+					fsm_onRequestButtonPress(f, Button(b), sendBtnCallCh)
 				}
 				prev_button[f][b] = v
 			}

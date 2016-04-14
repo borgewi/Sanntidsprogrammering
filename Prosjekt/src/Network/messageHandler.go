@@ -7,7 +7,7 @@ import (
 
 var isMaster bool
 
-func MH_HandleOutgoingMsg(msgToNetwork, sendOrderCh chan UdpMessage, localStatusCh, updateElevsCh chan Elev_control.Elevator, sendBtnCallsCh, receiveBtnCallsCh chan [2]int) {
+func MH_HandleOutgoingMsg(msgToNetwork, sendOrderCh chan UdpMessage, localStatusCh, updateElevsCh chan Elev_control.Elevator, sendBtnCallCh, receiveBtnCallCh chan [2]int) {
 	var elev Elev_control.Elevator
 	var msg UdpMessage
 	for {
@@ -17,15 +17,15 @@ func MH_HandleOutgoingMsg(msgToNetwork, sendOrderCh chan UdpMessage, localStatus
 				updateElevsCh <- elev
 			case msg = <-sendOrderCh:
 				msgToNetwork <- msg
-			case btn_calls := <-sendBtnCallsCh:
-				receiveBtnCallsCh <- btn_calls
+			case btn_call := <-sendBtnCallCh:
+				receiveBtnCallCh <- btn_call
 			}
 		} else {
 			select {
 			case elev = <-localStatusCh:
 				msg.Data = elev
 				msgToNetwork <- msg
-			case new_call := <-sendBtnCallsCh:
+			case new_call := <-sendBtnCallCh:
 				msg.Order_ID = 1
 				msg.Order = new_call
 				msgToNetwork <- msg

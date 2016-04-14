@@ -50,7 +50,6 @@ func checkTimeStamps(handleOrderAgainCh chan [2]int) {
 		} else {
 			timeNow = time.Now().Unix()
 			time.Sleep(1500 * time.Millisecond)
-			fmt.Printf("%+v", timeNow)
 			fmt.Println("")
 			fmt.Printf("%+v", btn_calls_timeStamp)
 			fmt.Println("")
