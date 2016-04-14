@@ -34,7 +34,7 @@ func MH_HandleOutgoingMsg(msgToNetwork, sendOrderCh chan UdpMessage, localStatus
 	}
 }
 
-func MH_HandleIncomingMsg(msgFromNetwork chan UdpMessage, updateElevsCh chan Elev_control.Elevator, receiveBtnCallsCh chan [2]int) {
+func MH_HandleIncomingMsg(msgFromNetwork chan UdpMessage, updateElevsCh chan Elev_control.Elevator, receiveBtnCallCh chan [2]int, receiveAllBtnCallsCh chan [4][2]bool) {
 	//var elev Elev_control.Elevator
 	var msg UdpMessage
 	for {
@@ -46,9 +46,11 @@ func MH_HandleIncomingMsg(msgFromNetwork chan UdpMessage, updateElevsCh chan Ele
 			//Elev_control.PrintElev(elev)
 			fmt.Println("")
 			break
-		case 1:
-			fmt.Println("Mottatt btn call fra slave")
-			receiveBtnCallsCh <- msg.Order
+		case 1: // mottatt btn_call
+			//fmt.Println("Mottatt btn call fra slave")
+			receiveBtnCallCh <- msg.Order
+		case 2: // mottatt all_btn_calls som distribueres fra master
+			receiveAllBtnCallsCh <- msg.Btn_calls
 		default:
 			fmt.Println("Ordre mottas til: ", msg.Order_ID)
 			Elev_control.Fsm_addOrder(msg.Order, msg.Order_ID)
@@ -66,5 +68,12 @@ func MH_send_new_order(to_elev int64, order [2]int, sendOrderCh chan UdpMessage)
 	msg.Order_ID = to_elev
 	msg.Order = order
 	Elev_control.Fsm_addOrder(order, to_elev)
+	sendOrderCh <- msg
+}
+
+func MH_broadcast_all_btn_calls(all_btn_calls [4][2]bool, sendOrderCh chan UdpMessage) {
+	var msg UdpMessage
+	msg.Order_ID = 2
+	msg.Btn_calls = all_btn_calls
 	sendOrderCh <- msg
 }
