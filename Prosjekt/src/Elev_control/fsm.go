@@ -8,7 +8,7 @@ import (
 )
 
 //Gjøre om denne til å styres av interne kommandoer OG når all_btn_calls mottas.
-func setAllLights() {
+func setAllLights(elevator Elevator, allExtBtns [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]bool) {
 	for floor := 0; floor < Driver.NUMFLOORS; floor++ {
 		for btn := 0; btn < Driver.NUMBUTTONS; btn++ {
 			if btn == int(B_Cab) {
@@ -20,10 +20,10 @@ func setAllLights() {
 	}
 }
 
-func updateAllExtLights(receiveAllBtnCallsCh chan [4][2]bool) {
+func updateAllExtLights(receiveAllBtnCallsCh chan [4][2]bool, allExtBtns [4][2]bool) {
 	for {
 		allExtBtns = <-receiveAllBtnCallsCh
-		setAllLights()
+		//setAllLights()
 	}
 }
 
@@ -31,21 +31,25 @@ func fsm_onInitBetweenFloors() {
 	Driver.ElevSetMotorDirection(int(D_Down))
 	elevator.Dir = D_Down
 	elevator.Behaviour = EB_Moving
-	lastFloorTime = time.Now().Unix()
+	//lastFloorTime = time.Now().Unix()
 	for Driver.ElevGetFloorSensorSignal() == -1 {
 	}
 	Driver.ElevSetMotorDirection(int(D_Idle))
 }
 
-func fsm_onRequestButtonPress(btn_floor int, btn_type Button, sendBtnCallCh chan [2]int) {
+func fsm_onRequestButtonPress(btn_floor int, btn_type Button) bool {
 	switch btn_type {
 	case B_Cab:
-		fsm_onNewActiveRequest(btn_floor, btn_type)
+		//fsm_onNewActiveRequest(btn_floor, btn_type)
+		return true
 	case B_HallDown:
-		fsm_SendNewOrderToMaster(btn_floor, btn_type, sendBtnCallCh)
+		//fsm_SendNewOrderToMaster(btn_floor, btn_type, sendBtnCallCh)
+		return false
 	case B_HallUp:
-		fsm_SendNewOrderToMaster(btn_floor, btn_type, sendBtnCallCh)
+		//fsm_SendNewOrderToMaster(btn_floor, btn_type, sendBtnCallCh)
+		return false
 	}
+	return false
 }
 
 func fsm_onNewActiveRequest(btn_floor int, btn_type Button) {
@@ -55,16 +59,13 @@ func fsm_onNewActiveRequest(btn_floor int, btn_type Button) {
 			timer_start(3000 * time.Millisecond)
 		} else {
 			elevator.Requests[btn_floor][btn_type] = true
-			//fsm_setTimeStamp(btn_floor,btn_type)
 		}
 		break
 	case EB_Moving:
 		elevator.Requests[btn_floor][btn_type] = true
-		//fsm_setTimeStamp(btn_floor,btn_type)
 		break
 	case EB_Idle:
 		elevator.Requests[btn_floor][btn_type] = true
-		//fsm_setTimeStamp(btn_floor,btn_type)
 		elevator.Dir = requests_chooseDirection(elevator)
 		if elevator.Dir == D_Idle {
 			Driver.ElevSetDoorLight(true)
@@ -74,12 +75,11 @@ func fsm_onNewActiveRequest(btn_floor int, btn_type Button) {
 		} else {
 			Driver.ElevSetMotorDirection(int(elevator.Dir))
 			elevator.Behaviour = EB_Moving
-			lastFloorTime = time.Now().Unix()
+			//lastFloorTime = time.Now().Unix()
 		}
 		break
 	}
-
-	setAllLights()
+	//setAllLights()
 }
 
 func fsm_SendNewOrderToMaster(btn_floor int, btn_type Button, sendBtnCallCh chan [2]int) {
@@ -100,9 +100,9 @@ func fsm_onFloorArrival(newFloor int) {
 			Driver.ElevSetDoorLight(true)
 			elevator = requests_clearAtCurrentFloor(elevator)
 			timer_start(3000 * time.Millisecond)
-			setAllLights()
+			//setAllLights()
 			elevator.Behaviour = EB_DoorOpen
-			lastFloorTime = time.Now().Unix()
+			//lastFloorTime = time.Now().Unix()
 		}
 		break
 	default:
@@ -120,7 +120,7 @@ func fsm_onDoorTimeout() {
 			elevator.Behaviour = EB_Idle
 		} else {
 			elevator.Behaviour = EB_Moving
-			lastFloorTime = time.Now().Unix()
+			//lastFloorTime = time.Now().Unix()
 		}
 		break
 	default:
@@ -141,15 +141,17 @@ func fsm_elevatorUninitialized() {
 }
 
 func Fsm_addOrder(Order [2]int, Order_ID int64) {
+
 	if Order_ID == elevator.Elev_ID {
 		fsm_onNewActiveRequest(Order[0], Button(Order[1]))
+		fmt.Println("Mottat ordre og kjører fsm_onNewActiveRequest")
 	} else {
 		fmt.Println("Feil Order_ID")
 	}
 }
 
 //Skal vi ha med denne?
-func fsm_checkExtRequestsStillActive() {
+/*func fsm_checkExtRequestsStillActive() {
 	for i, k := range elevator.Requests {
 		for j, _ := range k {
 			if j != 2 && elevator.Requests[i][j] {
@@ -161,3 +163,4 @@ func fsm_checkExtRequestsStillActive() {
 		}
 	}
 }
+*/

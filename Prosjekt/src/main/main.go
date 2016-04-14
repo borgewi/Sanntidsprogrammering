@@ -25,7 +25,7 @@ const (
 )
 
 func main() {
-	go Backup()
+	//go Backup()
 	Driver.ElevInit()
 	localStatusCh := make(chan Elev_control.Elevator)
 	sendBtnCallCh := make(chan [NUMBUTTONS - 1]int, 5)
@@ -37,8 +37,7 @@ func main() {
 	var err int
 	for {
 		err = <-errorCh
-		fmt.Println("Error har oppstått. Kjører ElevInit. err = ", err)
-		Driver.ElevInit()
+		fmt.Println("Error har oppstått. Har vært i EB_Moving for lenge. err = ", err)
 	}
 }
 

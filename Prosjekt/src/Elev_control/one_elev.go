@@ -15,17 +15,15 @@ type Elevator struct {
 	//doorOpenDuration_s float
 }
 
+var elevator Elevator
+
 //var requests_timeStamp [4][3]int64 //Setter timeStamp når en ordre aktiveres.
 
-var (
-	elevator      Elevator
-	lastFloorTime int64
-	allExtBtns    [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]bool
-	isOnline      bool
-)
-
 func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiveAllBtnCallsCh chan [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]bool, errorCh chan int) {
-	//var elevator2 Elevator
+	//var (
+	//lastFloorTime int64
+	//allExtBtns    [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]bool
+	//)
 
 	//Init elev_state
 	if Driver.ElevGetFloorSensorSignal() == -1 {
@@ -35,23 +33,27 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiv
 	fmt.Println("Elev ID: ", elevator.Elev_ID)
 	//fmt.Printf("%+v", elevator.Elev_ID)
 	//fmt.Println("")
-	go send_status(localStatusCh)
+	//go send_status(localStatusCh)
 
 	running := true
 	var prev_button [Driver.NUMFLOORS][Driver.NUMBUTTONS]int
 	var prev_floor int
 	prev_floor = Driver.ElevGetFloorSensorSignal()
 
-	go checkElevMoving(errorCh)
-	go updateAllExtLights(receiveAllBtnCallsCh)
-
+	//go checkElevMoving(errorCh) kan sette på senere
+	//go updateAllExtLights(receiveAllBtnCallsCh)
+	count := 0
 	for running {
 		// Request button
 		for f := 0; f < Driver.NUMFLOORS; f++ {
 			for b := 0; b < Driver.NUMBUTTONS; b++ {
 				v := Driver.ElevGetButtonSignal(b, f)
 				if v&int(v) != prev_button[f][b] {
-					fsm_onRequestButtonPress(f, Button(b), sendBtnCallCh)
+					if fsm_onRequestButtonPress(f, Button(b)) { //Hvis true er det innvendig knappetrykk
+						fsm_onNewActiveRequest(f, Button(b))
+					} else {
+						fsm_SendNewOrderToMaster(f, Button(b), sendBtnCallCh)
+					}
 				}
 				prev_button[f][b] = v
 			}
@@ -69,32 +71,35 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiv
 			fsm_onDoorTimeout()
 			timer_stop()
 		}
+		if count == 20 {
+			localStatusCh <- elevator
+			count = 0
+		}
 		time.Sleep(25 * time.Millisecond) //Hardkoding
+		count += 1
 	}
 }
 
-func send_status(localStatusCh chan Elevator) {
-	for {
-		time.Sleep(1000 * time.Millisecond)
-		localStatusCh <- elevator
-	}
-}
+/*func send_status(localStatusCh chan Elevator) {
+	time.Sleep(1000 * time.Millisecond)
+	localStatusCh <- elevator
+}*/
 
-func checkElevMoving(errorCh chan int) {
+/*func checkElevMoving(errorCh chan int) {
 	var errorTime int64
 	var timeNow int64
 	errorTime = 8
 	err := 1
 	for {
 		time.Sleep(1 * time.Second)
-		if elevator.Behaviour != EB_Idle {
+		if elevator.Behaviour == EB_Moving {
 			timeNow = time.Now().Unix()
 			if timeNow-lastFloorTime > errorTime {
 				errorCh <- err
 			}
 		}
 	}
-}
+}*/
 
 func PrintElev(elev Elevator) {
 	fmt.Println("")

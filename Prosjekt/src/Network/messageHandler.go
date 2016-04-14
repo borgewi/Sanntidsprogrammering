@@ -3,6 +3,7 @@ package Network
 import (
 	"Elev_control"
 	"fmt"
+	//"time"
 )
 
 var isMaster bool
@@ -47,15 +48,18 @@ func MH_HandleIncomingMsg(msgFromNetwork chan UdpMessage, updateElevsCh chan Ele
 		switch msg.Order_ID {
 		case statusMsg:
 			updateElevsCh <- msg.Data
-			fmt.Println("")
+			fmt.Println("Statusmelding fra slave\n")
 			break
 		case btnCallMsg:
+			fmt.Println("btncallmsg")
 			receiveBtnCallCh <- msg.Order
 		case allBtnCallsMsg:
+			fmt.Println("allbtncallsmsg")
 			receiveAllBtnCallsCh <- msg.Btn_calls
 		default:
 			fmt.Println("Ordre mottas til: ", msg.Order_ID)
 			Elev_control.Fsm_addOrder(msg.Order, msg.Order_ID)
+
 		}
 	}
 }
