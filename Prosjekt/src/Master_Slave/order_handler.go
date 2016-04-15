@@ -8,7 +8,6 @@ import (
 //Returns index of the elevator that should handle the specific btn_call. Elementer i Elevators_online må ikke ha endret seg!
 //Dersom den returnerer -1: vent et halvt sekund og prøv på nytt. Eventuelt gi oppdrag til første heis som får Dir D_Idle
 func cost_function(btn_floor int, btn_type Elev_control.Button, elevs_online []Elev_control.Elevator) int {
-	fmt.Println("Comment")
 	i_best_time := -1
 	best_time := 100
 	var time_to_handle int

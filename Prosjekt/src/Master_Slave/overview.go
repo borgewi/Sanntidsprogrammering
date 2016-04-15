@@ -14,7 +14,6 @@ var all_btn_calls [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]bool
 var btn_calls_timeStamp [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]int64
 
 func update_Elevators_online(curr_elev Elev_control.Elevator) {
-	fmt.Println("Comment")
 	for i, elev := range elevators_online {
 		if elev.Elev_ID == curr_elev.Elev_ID {
 			elevators_online[i] = curr_elev

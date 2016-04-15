@@ -15,7 +15,6 @@ const (
 )
 
 func MH_HandleOutgoingMsg(msgToNetwork, sendOrderCh chan UdpMessage, localStatusCh, updateElevsCh chan Elev_control.Elevator, sendBtnCallCh, receiveBtnCallCh chan [2]int) {
-	fmt.Println("Comment")
 	var elev Elev_control.Elevator
 	var msg UdpMessage
 	for {
