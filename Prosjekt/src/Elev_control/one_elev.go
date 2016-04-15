@@ -24,7 +24,7 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiv
 	//var (
 	//lastFloorTime int64
 	//)
-
+	fmt.Println("Comment")
 	//Init elev_state
 	if Driver.ElevGetFloorSensorSignal() == -1 {
 		fsm_onInitBetweenFloors()

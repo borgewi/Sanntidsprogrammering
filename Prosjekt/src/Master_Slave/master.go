@@ -13,6 +13,7 @@ var isMaster bool
 //const extern_Addr = "129.241.187.255" + ":13337"
 
 func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallCh chan [2]int, receiveAllBtnCallsCh, setLights_setExtBtnsCh chan [4][2]bool, errorCh chan int) {
+	fmt.Println("Comment")
 	master_elev := <-localStatusCh
 	update_Elevators_online(master_elev)
 	msgToNetwork := make(chan Network.UdpMessage, 100)
