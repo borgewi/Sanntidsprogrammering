@@ -25,6 +25,7 @@ type UdpMessage struct {
 }
 
 func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool) {
+	fmt.Println("Comment")
 	alive_port := "13579"
 	my_IP := GetLocalIP()
 	fmt.Println("Lokal ip_addresse: \n", my_IP)
