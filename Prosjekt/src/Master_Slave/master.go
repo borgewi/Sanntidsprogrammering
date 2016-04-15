@@ -12,16 +12,16 @@ var isMaster bool
 
 //const extern_Addr = "129.241.187.255" + ":13337"
 
-func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallCh chan [2]int, receiveAllBtnCallsCh chan [4][2]bool, errorCh chan int) {
+func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallCh chan [2]int, receiveAllBtnCallsCh, setLights_setExtBtnsCh chan [4][2]bool, errorCh chan int) {
 	master_elev := <-localStatusCh
 	update_Elevators_online(master_elev)
-	msgToNetwork := make(chan Network.UdpMessage, 5)
-	msgFromNetwork := make(chan Network.UdpMessage, 5)
-	updateElevsCh := make(chan Elev_control.Elevator, 5)
+	msgToNetwork := make(chan Network.UdpMessage, 100)
+	msgFromNetwork := make(chan Network.UdpMessage, 100)
+	updateElevsCh := make(chan Elev_control.Elevator, 100)
 	isMasterCh := make(chan bool)
-	sendOrderCh := make(chan Network.UdpMessage, 5)
-	receiveBtnCallCh := make(chan [2]int, 5)
-	handleOrderAgainCh := make(chan [2]int, 5)
+	sendOrderCh := make(chan Network.UdpMessage, 100)
+	receiveBtnCallCh := make(chan [2]int, 100)
+	handleOrderAgainCh := make(chan [2]int, 100)
 	Network.Init_udp(msgToNetwork, msgFromNetwork, isMasterCh)
 	go Network.MH_HandleIncomingMsg(msgFromNetwork, updateElevsCh, receiveBtnCallCh, receiveAllBtnCallsCh)
 	go Network.MH_HandleOutgoingMsg(msgToNetwork, sendOrderCh, localStatusCh, updateElevsCh, sendBtnCallCh, receiveBtnCallCh)
@@ -47,6 +47,7 @@ func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallCh chan [2]in
 				elev_ID := temp_Elevators_online[index_elev].Elev_ID
 				fmt.Printf("%+v", elev_ID)
 				Network.MH_send_new_order(elev_ID, call, sendOrderCh)
+				fmt.Println("Ferdig med updatebtncalls")
 			}
 		case call = <-handleOrderAgainCh:
 			fmt.Println("Kommer handleOrderAgainCh")
@@ -58,14 +59,20 @@ func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallCh chan [2]in
 		case allCalls := <-receiveAllBtnCallsCh:
 			fmt.Println("Kommer receiveAllBtnCallsCh")
 			setAll_btn_calls(allCalls)
+			setLights_setExtBtnsCh <- allCalls
 		case elev := <-updateElevsCh:
-			fmt.Println("Kommer updateElevsCh")
 			update_All_elevs(elev)
+			fmt.Println("Kommer updateElevsCh")
 		}
 		check_elevsIdleAtFloor()
 		temp_All_btn_calls := get_All_btn_calls()
 		if isMaster {
+			fmt.Println("Kommer før MH_broadcast_all_btn_calls")
 			Network.MH_broadcast_all_btn_calls(temp_All_btn_calls, sendOrderCh)
+			fmt.Println("Er det analen?")
+			setLights_setExtBtnsCh <- temp_All_btn_calls
+			fmt.Println("Sendt til setLights_setExtBtnsCh")
+			checkTimeStamps(handleOrderAgainCh)
 		}
 		if wasMaster && !isMaster { //Blir Slave
 			delete_All_elevs()
@@ -91,7 +98,7 @@ func update_All_elevs(elev Elev_control.Elevator) {
 //, receiveAllBtnCallsCh chan [4][2]bool
 
 //mottar knappetrykk og kjører kostfunk på dem
-func runCostfunctionOnBtnCalls(receiveBtnCallCh, handleOrderAgainCh chan [2]int, sendOrderCh chan Network.UdpMessage) {
+/*func runCostfunctionOnBtnCalls(receiveBtnCallCh, handleOrderAgainCh chan [2]int, sendOrderCh chan Network.UdpMessage) {
 	//go checkTimeStamps(handleOrderAgainCh)
 	var oldCall bool
 	var call [2]int
@@ -114,13 +121,13 @@ func runCostfunctionOnBtnCalls(receiveBtnCallCh, handleOrderAgainCh chan [2]int,
 		}
 		//Fuckit.Unlock()
 	}
-}
+}*/
 
 func runCost_AllUnfinishedOrders(handleOrderAgainCh chan [2]int) {
 	var oldOrder [2]int
 	//Fuckit.Lock()
 	//defer Fuckit.Unlock()
-	for i, k := range All_btn_calls {
+	for i, k := range all_btn_calls {
 		for j, call := range k {
 			fmt.Println(i, j, call)
 			if call {
@@ -147,6 +154,6 @@ func checkForError(errorCh chan int) {
 
 func print_All_elevs_status() {
 	fmt.Println("\n")
-	fmt.Printf("%+v", Elevators_online)
+	fmt.Printf("%+v", elevators_online)
 	fmt.Println("\n")
 }

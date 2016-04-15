@@ -8,7 +8,7 @@ import (
 )
 
 //Gjøre om denne til å styres av interne kommandoer OG når all_btn_calls mottas.
-func setAllLights(elevator Elevator, allExtBtns [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]bool) {
+func setAllLights() {
 	for floor := 0; floor < Driver.NUMFLOORS; floor++ {
 		for btn := 0; btn < Driver.NUMBUTTONS; btn++ {
 			if btn == int(B_Cab) {
@@ -53,6 +53,7 @@ func fsm_onRequestButtonPress(btn_floor int, btn_type Button) bool {
 }
 
 func fsm_onNewActiveRequest(btn_floor int, btn_type Button) {
+	fmt.Println("Kommer inn i fsm_onani\nFloor: ", btn_floor, " Button: ", btn_type)
 	switch elevator.Behaviour {
 	case EB_DoorOpen:
 		if elevator.Floor == btn_floor {
@@ -66,7 +67,9 @@ func fsm_onNewActiveRequest(btn_floor int, btn_type Button) {
 		break
 	case EB_Idle:
 		elevator.Requests[btn_floor][btn_type] = true
+		fmt.Println("Kjører requests_chooseDirection")
 		elevator.Dir = requests_chooseDirection(elevator)
+		fmt.Println("Kommer ut av requests_chooseDirection")
 		if elevator.Dir == D_Idle {
 			Driver.ElevSetDoorLight(true)
 			elevator = requests_clearAtCurrentFloor(elevator)
@@ -80,6 +83,7 @@ func fsm_onNewActiveRequest(btn_floor int, btn_type Button) {
 		break
 	}
 	//setAllLights()
+	fmt.Println("Kommer ut av fsm_onani")
 }
 
 func fsm_SendNewOrderToMaster(btn_floor int, btn_type Button, sendBtnCallCh chan [2]int) {

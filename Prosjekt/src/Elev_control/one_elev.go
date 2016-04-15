@@ -16,13 +16,13 @@ type Elevator struct {
 }
 
 var elevator Elevator
+var allExtBtns [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]bool
 
 //var requests_timeStamp [4][3]int64 //Setter timeStamp når en ordre aktiveres.
 
-func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiveAllBtnCallsCh chan [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]bool, errorCh chan int) {
+func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiveAllBtnCallsCh chan [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]bool, setLights_setExtBtnsCh chan [4][2]bool, errorCh chan int) {
 	//var (
 	//lastFloorTime int64
-	//allExtBtns    [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]bool
 	//)
 
 	//Init elev_state
@@ -39,7 +39,7 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiv
 	var prev_button [Driver.NUMFLOORS][Driver.NUMBUTTONS]int
 	var prev_floor int
 	prev_floor = Driver.ElevGetFloorSensorSignal()
-
+	go Update_ExtBtnCallsInElevControl(setLights_setExtBtnsCh)
 	//go checkElevMoving(errorCh) kan sette på senere
 	//go updateAllExtLights(receiveAllBtnCallsCh)
 	count := 0
@@ -77,6 +77,7 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiv
 		}
 		time.Sleep(25 * time.Millisecond) //Hardkoding
 		count += 1
+		setLights_setExtBtnsCh <- allExtBtns
 	}
 }
 
@@ -100,6 +101,15 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiv
 		}
 	}
 }*/
+
+func Update_ExtBtnCallsInElevControl(setLights_setExtBtnsCh chan [4][2]bool) {
+	var temp_allExtBtns [4][2]bool
+	for {
+		temp_allExtBtns = <-setLights_setExtBtnsCh
+		allExtBtns = temp_allExtBtns
+		setAllLights()
+	}
+}
 
 func PrintElev(elev Elevator) {
 	fmt.Println("")

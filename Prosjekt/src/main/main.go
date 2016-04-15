@@ -25,15 +25,17 @@ const (
 )
 
 func main() {
+
 	//go Backup()
 	Driver.ElevInit()
-	localStatusCh := make(chan Elev_control.Elevator)
-	sendBtnCallCh := make(chan [NUMBUTTONS - 1]int, 5)
+	localStatusCh := make(chan Elev_control.Elevator, 100)
+	sendBtnCallCh := make(chan [NUMBUTTONS - 1]int, 100)
 	errorCh := make(chan int)
-	receiveAllBtnCallsCh := make(chan [NUMFLOORS][NUMBUTTONS - 1]bool, 5)
+	receiveAllBtnCallsCh := make(chan [NUMFLOORS][NUMBUTTONS - 1]bool, 100)
+	setLights_setExtBtnsCh := make(chan [4][2]bool, 100)
 
-	go Elev_control.Run_Elevator(localStatusCh, sendBtnCallCh, receiveAllBtnCallsCh, errorCh)
-	go Master_Slave.Princess(localStatusCh, sendBtnCallCh, receiveAllBtnCallsCh, errorCh)
+	go Elev_control.Run_Elevator(localStatusCh, sendBtnCallCh, receiveAllBtnCallsCh, setLights_setExtBtnsCh, errorCh)
+	go Master_Slave.Princess(localStatusCh, sendBtnCallCh, receiveAllBtnCallsCh, setLights_setExtBtnsCh, errorCh)
 	var err int
 	for {
 		err = <-errorCh

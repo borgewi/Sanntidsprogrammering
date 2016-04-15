@@ -26,6 +26,7 @@ func MH_HandleOutgoingMsg(msgToNetwork, sendOrderCh chan UdpMessage, localStatus
 				msgToNetwork <- msg
 			case btn_call := <-sendBtnCallCh:
 				receiveBtnCallCh <- btn_call
+				fmt.Println("Button call: ", btn_call)
 			}
 		} else {
 			select {
