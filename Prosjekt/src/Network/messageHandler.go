@@ -31,6 +31,7 @@ func MH_HandleOutgoingMsg(msgToNetwork, sendOrderCh chan UdpMessage, localStatus
 		} else {
 			select {
 			case elev = <-localStatusCh:
+				msg.Order_ID = 0
 				msg.Data = elev
 				msgToNetwork <- msg
 			case new_call := <-sendBtnCallCh:
