@@ -14,7 +14,30 @@ const (
 	allBtnCallsMsg int64 = 2
 )
 
-func MH_HandleOutgoingMsg(msgToNetwork, sendOrderCh chan UdpMessage, localStatusCh, updateElevsCh chan Elev_control.Elevator, sendBtnCallCh, receiveBtnCallCh chan [2]int) {
+func MH_HandleIncomingMsg(msgFromNetwork chan UdpMessage, updateElevsCh chan Elev_control.Elevator, receiveBtnCallCh chan [2]int, receiveAllBtnCallsCh chan [4][2]bool) {
+	var msg UdpMessage
+	for {
+		msg = <-msgFromNetwork
+		switch msg.Order_ID {
+		case statusMsg:
+			updateElevsCh <- msg.Data
+			//fmt.Println("Statusmelding fra slave\n")
+			break
+		case btnCallMsg:
+			//fmt.Println("btncallmsg")
+			receiveBtnCallCh <- msg.Order
+		case allBtnCallsMsg:
+			//fmt.Println("allbtncallsmsg")
+			receiveAllBtnCallsCh <- msg.Btn_calls
+		default:
+			//fmt.Println("Ordre mottas til: ", msg.Order_ID)
+			Elev_control.Fsm_addOrder(msg.Order, msg.Order_ID)
+
+		}
+	}
+}
+
+func MH_HandleOutgoingMsg(msgToNetwork chan UdpMessage, updateElevsCh chan Elev_control.Elevator, sendOrderCh chan UdpMessage, localStatusCh chan Elev_control.Elevator, sendBtnCallCh chan [2]int, receiveBtnCallCh chan [2]int) {
 	var elev Elev_control.Elevator
 	var msg UdpMessage
 	for {
@@ -39,29 +62,6 @@ func MH_HandleOutgoingMsg(msgToNetwork, sendOrderCh chan UdpMessage, localStatus
 				msg.Order = new_call
 				msgToNetwork <- msg
 			}
-		}
-	}
-}
-
-func MH_HandleIncomingMsg(msgFromNetwork chan UdpMessage, updateElevsCh chan Elev_control.Elevator, receiveBtnCallCh chan [2]int, receiveAllBtnCallsCh chan [4][2]bool) {
-	var msg UdpMessage
-	for {
-		msg = <-msgFromNetwork
-		switch msg.Order_ID {
-		case statusMsg:
-			updateElevsCh <- msg.Data
-			fmt.Println("Statusmelding fra slave\n")
-			break
-		case btnCallMsg:
-			fmt.Println("btncallmsg")
-			receiveBtnCallCh <- msg.Order
-		case allBtnCallsMsg:
-			fmt.Println("allbtncallsmsg")
-			receiveAllBtnCallsCh <- msg.Btn_calls
-		default:
-			fmt.Println("Ordre mottas til: ", msg.Order_ID)
-			Elev_control.Fsm_addOrder(msg.Order, msg.Order_ID)
-
 		}
 	}
 }

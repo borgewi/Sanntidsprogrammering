@@ -12,6 +12,7 @@ import (
 const MSGsize = 512
 const masterPort = 47838
 const slavePort = 47839
+const alive_port = "47837"
 
 //var lAddr *net.UDPAddr //Local address
 //var bAddr *net.UDPAddr //Broadcast address
@@ -25,8 +26,6 @@ type UdpMessage struct {
 }
 
 func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool) {
-	fmt.Println("Comment")
-	alive_port := "13579"
 	my_IP := GetLocalIP()
 	fmt.Println("Lokal ip_addresse: \n", my_IP)
 	peerListLocalCh := make(chan []string)
@@ -65,6 +64,7 @@ func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool
 				}
 			case new_peer_list := <-peerListLocalCh:
 				//fmt.Println("case: peerListLocalCh")
+				fmt.Println(new_peer_list)
 				highest_IP := my_IP
 				for _, IP := range new_peer_list {
 					if highest_IP < IP {

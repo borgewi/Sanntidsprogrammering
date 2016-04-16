@@ -17,6 +17,7 @@ func update_Elevators_online(curr_elev Elev_control.Elevator) {
 	for i, elev := range elevators_online {
 		if elev.Elev_ID == curr_elev.Elev_ID {
 			elevators_online[i] = curr_elev
+			fmt.Println("Oppdatert elev status: ", curr_elev)
 			return
 		}
 	}
@@ -24,7 +25,23 @@ func update_Elevators_online(curr_elev Elev_control.Elevator) {
 }
 
 func delete_All_elevs() {
-	elevators_online = elevators_online[:1]
+	elevators_online = elevators_online[:0]
+}
+
+func update_All_elevs(elev Elev_control.Elevator) {
+	//print_All_elevs_status()
+	update_Elevators_online(elev)
+}
+
+func print_All_elevs_status() {
+	var counter int
+	counter = 0
+	for _, elev := range elevators_online {
+		fmt.Println("Heis nummer ", counter)
+		fmt.Printf("%+v", elev)
+		fmt.Println("")
+		counter++
+	}
 }
 
 func update_btnCalls(newCall [2]int) bool {
@@ -32,7 +49,7 @@ func update_btnCalls(newCall [2]int) bool {
 		return false
 	}
 	all_btn_calls[newCall[0]][newCall[1]] = true
-	setTimeStamp(newCall[0], newCall[1])
+	//setTimeStamp(newCall[0], newCall[1])
 	return true
 }
 
@@ -78,8 +95,8 @@ func checkTimeStamps(handleOrderAgainCh chan [2]int) {
 	if isMaster {
 		timeNow = time.Now().Unix()
 		fmt.Println("")
-		fmt.Printf("%+v", btn_calls_timeStamp)
-		fmt.Println("")
+		//fmt.Printf("%+v", btn_calls_timeStamp)
+		//fmt.Println("")
 		for i, k := range btn_calls_timeStamp {
 			for j, timeStamp := range k {
 				if timeStamp != 0 {

@@ -25,7 +25,6 @@ const (
 )
 
 func main() {
-	fmt.Println("Comment")
 	//go Backup()
 	Driver.ElevInit()
 	localStatusCh := make(chan Elev_control.Elevator, 100)

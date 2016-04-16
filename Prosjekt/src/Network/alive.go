@@ -6,9 +6,8 @@ import (
 	"time"
 )
 
-
-const aliveSendInterval = 70*time.Millisecond
-const aliveTimeout = 300*time.Millisecond
+const aliveSendInterval = 30 * time.Millisecond
+const aliveTimeout = 300 * time.Millisecond
 
 func udpSendAlive(port string) {
 
@@ -21,8 +20,7 @@ func udpSendAlive(port string) {
 	}
 }
 
-
-func udpRecvAlive(port string, peerListLocalCh chan []string){
+func udpRecvAlive(port string, peerListLocalCh chan []string) {
 
 	var buf [1024]byte
 
@@ -30,12 +28,15 @@ func udpRecvAlive(port string, peerListLocalCh chan []string){
 	hasChanges := false
 	var peerList []string
 
-	service 		:= ":"+port
-	udpAddr, _ 		:= net.ResolveUDPAddr("udp4", service)
-	readConn, _ 	:= net.ListenUDP("udp4", udpAddr)
-
+	service := ":" + port
+	udpAddr, _ := net.ResolveUDPAddr("udp4", service)
+	readConn, _ := net.ListenUDP("udp4", udpAddr)
+	count := 4
 	for {
-		hasChanges = false
+		if count == 4 {
+			hasChanges = false
+			count = 0
+		}
 
 		// Ending read after one second has passed
 		readConn.SetReadDeadline(time.Now().Add(aliveTimeout))
@@ -44,12 +45,12 @@ func udpRecvAlive(port string, peerListLocalCh chan []string){
 		if err != nil {
 			continue
 		}
-		
+
 		addrString := fromAddress.IP.String()
 
 		_, addrIsInList := lastSeen[addrString]
 
-		if !addrIsInList {			
+		if !addrIsInList {
 			hasChanges = true
 		}
 
@@ -62,8 +63,8 @@ func udpRecvAlive(port string, peerListLocalCh chan []string){
 				delete(lastSeen, k)
 			}
 		}
-		
-		if hasChanges {
+
+		if hasChanges && count == 3 {
 			peerList = nil
 
 			for k, _ := range lastSeen {
@@ -72,5 +73,6 @@ func udpRecvAlive(port string, peerListLocalCh chan []string){
 			//Sending list of connected IPs
 			peerListLocalCh <- peerList
 		}
+		count++
 	}
 }
