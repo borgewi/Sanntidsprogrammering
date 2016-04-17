@@ -22,12 +22,15 @@ var (
 	lastFloorTime int64
 )
 
+const (
+	ERR_NO_ERROR = 0+iota
+	ERR_MOTORSTOP
+	ERR_NO_ELEVS_OPERABLE
+)
+
 //var requests_timeStamp [4][3]int64 //Setter timeStamp når en ordre aktiveres.
 
 func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiveAllBtnCallsCh chan [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]bool, setLights_setExtBtnsCh chan [4][2]bool, errorCh chan int) {
-	//var (
-	//lastFloorTime int64
-	//)
 	//Init elev_state
 	if Driver.ElevGetFloorSensorSignal() == -1 {
 		fsm_onInitBetweenFloors()
@@ -99,19 +102,19 @@ func checkElevMoving(errorCh chan int) {
 	var errorTime int64
 	var timeNow int64
 	errorTime = 8
-	err := 1
+	var err int
 	for {
 		time.Sleep(3 * time.Second)
 		if elevator.Behaviour == EB_Moving {
 			fmt.Println("Elevator status: ", elevator, "\n\n")
 			timeNow = time.Now().Unix()
 			if timeNow-lastFloorTime > errorTime {
-				err = 1
+				err = ERR_MOTORSTOP
 				errorCh <- err
 				elevator.Error = true
 			}
 		} else {
-			err = 0
+			err = ERR_NO_ERROR
 			elevator.Error = false
 			errorCh <- err
 		}

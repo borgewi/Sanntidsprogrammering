@@ -10,8 +10,6 @@ import (
 
 var isMaster bool
 
-//const extern_Addr = "129.241.187.255" + ":13337"
-
 func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallCh chan [2]int, receiveAllBtnCallsCh, setLights_setExtBtnsCh chan [4][2]bool, errorCh chan int) {
 	master_elev := <-localStatusCh
 	update_Elevators_online(master_elev)
@@ -38,6 +36,10 @@ func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallCh chan [2]in
 				fmt.Println("UPDATEBTNCALLS ")
 				temp_Elevators_online := getElevators_Online()
 				index_elev := cost_function(call[0], Elev_control.Button(call[1]), temp_Elevators_online)
+				if index_elev == -1{
+					errorCh <- Elev_control.ERR_NO_ELEVS_OPERABLE
+					break
+				}
 				elev_ID := temp_Elevators_online[index_elev].Elev_ID
 				fmt.Printf("ElevID fra receiveBtnCallCh: ")
 				fmt.Printf("%+v", elev_ID)
@@ -48,6 +50,10 @@ func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallCh chan [2]in
 			fmt.Println("Kommer til handleOrderAgainCh")
 			temp_Elevators_online := getElevators_Online()
 			index_elev := cost_function(call[0], Elev_control.Button(call[1]), temp_Elevators_online)
+			if index_elev == -1{
+				errorCh <- Elev_control.ERR_NO_ELEVS_OPERABLE
+				break
+			}
 			elev_ID := temp_Elevators_online[index_elev].Elev_ID
 			fmt.Printf("%+v", elev_ID)
 			Network.MH_send_new_order(elev_ID, call, sendOrderCh)
@@ -82,56 +88,11 @@ func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallCh chan [2]in
 			//fmt.Println("Sendt til setLights_setExtBtnsCh")
 			checkTimeStamps(handleOrderAgainCh)
 		}
-
-		/*if wasMaster && !isMaster { //Blir Slave
-			fmt.Println("Kommer hit")
-			delete_All_elevs()
-			fmt.Println("                       				Er slave")
-			Network.MH_UpdateMasterStatus(isMaster)
-			wasMaster = false
-		} else if !wasMaster && isMaster { //Blir Master
-			delete_All_elevs()
-			fmt.Println("                        				Er master")
-			Network.MH_UpdateMasterStatus(isMaster)
-			runCost_AllUnfinishedOrders(handleOrderAgainCh)
-			wasMaster = true
-		}*/
 	}
 }
 
-//receiveAllBtnCallsCh <- All_btn_calls
-//, receiveAllBtnCallsCh chan [4][2]bool
-
-//mottar knappetrykk og kjører kostfunk på dem
-/*func runCostfunctionOnBtnCalls(receiveBtnCallCh, handleOrderAgainCh chan [2]int, sendOrderCh chan Network.UdpMessage) {
-	//go checkTimeStamps(handleOrderAgainCh)
-	var oldCall bool
-	var call [2]int
-	if isMaster {
-		oldCall = false
-		select {
-		case call = <-receiveBtnCallCh:
-			break
-		case call = <-handleOrderAgainCh:
-			oldCall = true
-			fmt.Println("oldCall: ", oldCall)
-		}
-		//Fuckit.Lock()
-		if update_btnCalls(call) || oldCall { //Hvis det er en ny ordre
-			elevs_online := Elevators_online
-			index_elev := cost_function(call[0], Elev_control.Button(call[1]), elevs_online)
-			elev_ID := Elevators_online[index_elev].Elev_ID
-			fmt.Printf("%+v", elev_ID)
-			Network.MH_send_new_order(elev_ID, call, sendOrderCh)
-		}
-		//Fuckit.Unlock()
-	}
-}*/
-
 func runCost_AllUnfinishedOrders(handleOrderAgainCh chan [2]int) {
 	var oldOrder [2]int
-	//Fuckit.Lock()
-	//defer Fuckit.Unlock()
 	for i, k := range all_btn_calls {
 		for j, call := range k {
 			//fmt.Println(i, j, call)
@@ -141,18 +102,5 @@ func runCost_AllUnfinishedOrders(handleOrderAgainCh chan [2]int) {
 				handleOrderAgainCh <- oldOrder
 			}
 		}
-	}
-}
-
-func checkForError(errorCh chan int) {
-	var err int
-	for {
-		time.Sleep(1 * time.Second)
-		err = <-errorCh
-		if err == 1 {
-			fmt.Println("Error has occured")
-		}
-		//Master: Fjern denne heisen fra Elevators_online inntil den er operatibel igjen.
-		//Kjør cost_function på nytt for All_btn_calls
 	}
 }

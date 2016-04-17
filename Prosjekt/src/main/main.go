@@ -3,17 +3,15 @@ package main
 import (
 	"Elev_control"
 	//"net"
-	//"os/exec"
+	"os/exec"
 	//"time"
 	"Driver"
-	//"Network"
 	"Master_Slave"
 	"bufio"
 	"bytes"
 	"fmt"
 	"io"
 	"os"
-	//"strings"
 )
 
 const (
@@ -35,87 +33,31 @@ func main() {
 
 	go Elev_control.Run_Elevator(localStatusCh, sendBtnCallCh, receiveAllBtnCallsCh, setLights_setExtBtnsCh, errorCh)
 	go Master_Slave.Princess(localStatusCh, sendBtnCallCh, receiveAllBtnCallsCh, setLights_setExtBtnsCh, errorCh)
+	checkForError()
+	callBackup := exec.Command("gnome-terminal", "-x",  "sh", "-c", "go run main.go")
+	callBackup.Run()
+}
+
+func checkForError(){
 	var err int
 	for {
 		err = <-errorCh
-		if err == 1 {
+		if err == ERR_MOTORSTOP {
 			fmt.Println("Error har oppstått. Har vært i EB_Moving for lenge. err = ", err)
 			for {
 				err = <-errorCh
-				if err == 0 {
+				if err == ERR_NO_ERROR {
 					fmt.Println("Error er fikset")
 					break
+				} else if err == ERR_NO_ELEVS_OPERABLE{
+				fmt.Println("Ingen heiser er operatible.\nStarter program på nytt på ny terminal")
+				return
 				}
 			}
+		} else if err == ERR_NO_ELEVS_OPERABLE{
+			fmt.Println("Ingen heiser er operatible.\nStarter program på nytt på ny terminal")
+			return
 		}
 	}
 }
 
-func readLines(path string) (lines []string, err error) {
-	var (
-		file   *os.File
-		part   []byte
-		prefix bool
-	)
-	if file, err = os.Open(path); err != nil {
-		return
-	}
-	defer file.Close()
-
-	reader := bufio.NewReader(file)
-	buffer := bytes.NewBuffer(make([]byte, 0))
-	for {
-		if part, prefix, err = reader.ReadLine(); err != nil {
-			break
-		}
-		buffer.Write(part)
-		if !prefix {
-			lines = append(lines, buffer.String())
-			buffer.Reset()
-		}
-	}
-	if err == io.EOF {
-		err = nil
-	}
-	return
-}
-
-func writeLines(lines []string, path string) (err error) {
-	var (
-		file *os.File
-	)
-
-	if file, err = os.Open(path); err != nil {
-		return
-	}
-	defer file.Close()
-
-	//writer := bufio.NewWriter(file)
-	for _, item := range lines {
-		fmt.Println("				item")
-		_, err := file.WriteString(item + "\n")
-		file.Write([]byte(item))
-		if err != nil {
-			fmt.Println("debug")
-			fmt.Println(err)
-			break
-		}
-	}
-	/*content := strings.Join(lines, "\n")
-	  _, err = writer.WriteString(content)*/
-	return
-}
-
-func Backup() {
-	lines, err := readLines("/home/student/Desktop/BorgOsk/internalOrders.txt")
-	if err != nil {
-		fmt.Println("Error: %s\n", err)
-		return
-	}
-	for _, line := range lines {
-		fmt.Println(line)
-	}
-	//array := []string{"7.0", "8.5", "9.1"}
-	err = writeLines(lines, "/home/student/Desktop/BorgOsk/internalOrders.txt")
-	fmt.Println(err)
-}
