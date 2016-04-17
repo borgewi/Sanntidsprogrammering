@@ -14,6 +14,9 @@ func cost_function(btn_floor int, btn_type Elev_control.Button, elevs_online []E
 	var floors_between int
 
 	for i, elev := range elevs_online {
+		if elev.Error == true {
+			continue
+		}
 		floors_between = 0
 		time_to_handle = 0
 		if elev.Floor == btn_floor {

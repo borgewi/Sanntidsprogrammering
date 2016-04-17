@@ -64,7 +64,7 @@ func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool
 				}
 			case new_peer_list := <-peerListLocalCh:
 				//fmt.Println("case: peerListLocalCh")
-				fmt.Println(new_peer_list)
+				//fmt.Println(new_peer_list)
 				highest_IP := my_IP
 				for _, IP := range new_peer_list {
 					if highest_IP < IP {

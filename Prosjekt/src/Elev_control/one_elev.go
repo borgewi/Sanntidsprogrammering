@@ -12,6 +12,7 @@ type Elevator struct {
 	Requests  [Driver.NUMFLOORS][Driver.NUMBUTTONS]bool
 	Behaviour ElevatorBehaviour
 	Elev_ID   int64
+	Error     bool
 	//doorOpenDuration_s float
 }
 
@@ -39,7 +40,7 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiv
 	var prev_floor int
 	prev_floor = Driver.ElevGetFloorSensorSignal()
 	go Update_ExtBtnCallsInElevControl(setLights_setExtBtnsCh) //SETTE DENNE INN I RUNNING MEN UTEN FORLØKKE INNI SEG SELV?
-	//go checkElevMoving(errorCh) kan sette på senere
+	go checkElevMoving(errorCh)
 	//go updateAllExtLights(receiveAllBtnCallsCh)
 	update_status_count := 0
 	update_lights_count := 0
@@ -94,21 +95,28 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiv
 	}
 }
 
-/*func checkElevMoving(errorCh chan int) {
+func checkElevMoving(errorCh chan int) {
 	var errorTime int64
 	var timeNow int64
 	errorTime = 8
 	err := 1
 	for {
-		time.Sleep(1 * time.Second)
+		time.Sleep(3 * time.Second)
 		if elevator.Behaviour == EB_Moving {
+			fmt.Println("Elevator status: ", elevator, "\n\n")
 			timeNow = time.Now().Unix()
 			if timeNow-lastFloorTime > errorTime {
+				err = 1
 				errorCh <- err
+				elevator.Error = true
 			}
+		} else {
+			err = 0
+			elevator.Error = false
+			errorCh <- err
 		}
 	}
-}*/
+}
 
 func Update_ExtBtnCallsInElevControl(setLights_setExtBtnsCh chan [4][2]bool) {
 	var temp_allExtBtns [4][2]bool

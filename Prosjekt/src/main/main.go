@@ -38,7 +38,16 @@ func main() {
 	var err int
 	for {
 		err = <-errorCh
-		fmt.Println("Error har oppstått. Har vært i EB_Moving for lenge. err = ", err)
+		if err == 1 {
+			fmt.Println("Error har oppstått. Har vært i EB_Moving for lenge. err = ", err)
+			for {
+				err = <-errorCh
+				if err == 0 {
+					fmt.Println("Error er fikset")
+					break
+				}
+			}
+		}
 	}
 }
 

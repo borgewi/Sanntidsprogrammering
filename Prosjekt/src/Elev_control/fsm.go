@@ -31,7 +31,7 @@ func fsm_onInitBetweenFloors() {
 	Driver.ElevSetMotorDirection(int(D_Down))
 	elevator.Dir = D_Down
 	elevator.Behaviour = EB_Moving
-	//lastFloorTime = time.Now().Unix()
+	lastFloorTime = time.Now().Unix()
 	for Driver.ElevGetFloorSensorSignal() == -1 {
 	}
 	Driver.ElevSetMotorDirection(int(D_Idle))
@@ -79,7 +79,7 @@ func fsm_onNewActiveRequest(btn_floor int, btn_type Button) {
 		} else {
 			Driver.ElevSetMotorDirection(int(elevator.Dir))
 			elevator.Behaviour = EB_Moving
-			//lastFloorTime = time.Now().Unix()
+			lastFloorTime = time.Now().Unix()
 		}
 		break
 	}
@@ -106,6 +106,7 @@ func Fsm_addOrder(Order [2]int, Order_ID int64) {
 }
 
 func fsm_onFloorArrival(newFloor int) {
+	lastFloorTime = time.Now().Unix()
 	elevator.Floor = newFloor
 	Driver.ElevSetFloorIndicator(newFloor)
 	//fsm_checkExtRequestsStillActive() //Skal vi ha med denne?
@@ -118,7 +119,6 @@ func fsm_onFloorArrival(newFloor int) {
 			timer_start(3000 * time.Millisecond)
 			setAllLights()
 			elevator.Behaviour = EB_DoorOpen
-			//lastFloorTime = time.Now().Unix()
 		}
 		break
 	default:
@@ -136,7 +136,7 @@ func fsm_onDoorTimeout() {
 			elevator.Behaviour = EB_Idle
 		} else {
 			elevator.Behaviour = EB_Moving
-			//lastFloorTime = time.Now().Unix()
+			lastFloorTime = time.Now().Unix()
 		}
 		break
 	default:
