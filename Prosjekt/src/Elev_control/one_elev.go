@@ -73,7 +73,6 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiv
 			if f != prev_floor {
 				fsm_onFloorArrival(f)
 				localStatusCh <- elevator
-				fmt.Println("\nAnkommer nytt floor: elevator.Floor: ", elevator.Floor, "\n")
 			}
 		}
 		prev_floor = f
@@ -83,10 +82,8 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiv
 			timer_stop()
 			localStatusCh <- elevator
 		}
-		if update_status_count == 10 {
+		if update_status_count == 50 {
 			localStatusCh <- elevator
-		}
-		if update_status_count == 100 {
 			update_status_count = 0
 		}
 		if update_lights_count == 10 {
@@ -123,14 +120,12 @@ func checkElevMoving(errorCh chan int) {
 }
 
 func Update_ExtBtnCallsInElevControl(setLights_setExtBtnsCh chan [4][2]bool) {
-	var temp_allExtBtns [4][2]bool
 	for {
-		temp_allExtBtns = <-setLights_setExtBtnsCh
-		allExtBtns = temp_allExtBtns
+		allExtBtns = <-setLights_setExtBtnsCh
 		setAllLights()
 	}
 }
-
+/*
 func PrintElev(elev Elevator) {
 	fmt.Println("")
 	fmt.Println("Floor: ", elev.Floor)
@@ -139,4 +134,4 @@ func PrintElev(elev Elevator) {
 		fmt.Printf("%+v", elev.Requests[f])
 		fmt.Println("")
 	}
-}
+}*/

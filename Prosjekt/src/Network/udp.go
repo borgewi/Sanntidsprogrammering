@@ -28,9 +28,6 @@ func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool
 	my_IP := GetLocalIP()
 	fmt.Println("Lokal ip_addresse: \n", my_IP)
 	peerListLocalCh := make(chan []string)
-	go udpSendAlive(alive_port)
-	go udpRecvAlive(alive_port, peerListLocalCh)
-
 	msgToNetwork_master := make(chan UdpMessage, 100)
 	msgToNetwork_slave := make(chan UdpMessage, 100)
 	msgFromNetwork_master := make(chan UdpMessage, 100)
@@ -39,6 +36,8 @@ func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool
 	go transmitMsg(slavePort, msgToNetwork_slave)
 	go receiveMsg(masterPort, msgFromNetwork_master)
 	go receiveMsg(slavePort, msgFromNetwork_slave)
+	go udpSendAlive(alive_port)
+	go udpRecvAlive(alive_port, peerListLocalCh)
 
 	go func() {
 		isMaster := false
@@ -63,7 +62,7 @@ func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool
 				}
 			case new_peer_list := <-peerListLocalCh:
 				//fmt.Println("case: peerListLocalCh")
-				//fmt.Println(new_peer_list)
+				fmt.Println(new_peer_list)
 				highest_IP := my_IP
 				for _, IP := range new_peer_list {
 					if highest_IP < IP {
@@ -72,9 +71,11 @@ func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool
 				}
 				if my_IP == highest_IP {
 					isMaster = true
+					fmt.Println("Sedner true på isMasterCh")
 					isMasterCh <- true
 				} else {
 					isMaster = false
+					fmt.Println("Sedner false på isMasterCh")
 					isMasterCh <- false
 				}
 				//send {isMaster, peers.filter(ip)} to user

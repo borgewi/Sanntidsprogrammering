@@ -37,7 +37,7 @@ func MH_HandleIncomingMsg(msgFromNetwork chan UdpMessage, updateElevsCh chan Ele
 	}
 }
 
-func MH_HandleOutgoingMsg(msgToNetwork chan UdpMessage, updateElevsCh chan Elev_control.Elevator, sendOrderCh chan UdpMessage, localStatusCh chan Elev_control.Elevator, sendBtnCallCh chan [2]int, receiveBtnCallCh chan [2]int) {
+func MH_HandleOutgoingMsg(msgToNetwork, sendOrderCh chan UdpMessage, updateElevsCh, localStatusCh chan Elev_control.Elevator, sendBtnCallCh, receiveBtnCallCh chan [2]int) {
 	var elev Elev_control.Elevator
 	var msg UdpMessage
 	for {

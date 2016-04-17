@@ -4,11 +4,11 @@ import (
 	"Driver"
 	"Elev_control"
 	"fmt"
-	//"sync"
 	"time"
 )
 
-//var Fuckit = sync.Mutex{}
+
+//Ikke inkluder Driver bare for to const verdier!
 var elevators_online []Elev_control.Elevator
 var all_btn_calls [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]bool
 var btn_calls_timeStamp [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]int64
@@ -29,7 +29,6 @@ func delete_All_elevs() {
 }
 
 func update_All_elevs(elev Elev_control.Elevator) {
-	//print_All_elevs_status()
 	update_Elevators_online(elev)
 }
 
@@ -71,7 +70,16 @@ func setAll_btn_calls(btn_calls [4][2]bool) {
 
 func setTimeStamp(btn_floor int, btn_type int) {
 	btn_calls_timeStamp[btn_floor][btn_type] = time.Now().Unix()
-	//fmt.Println("Satte timeStamp")
+}
+
+func setNewTimeStampsOnActiveOrders() {
+	for floor, btnsAtFloor := range all_btn_calls {
+		for btn, call := range btnsAtFloor {
+			if call {
+				setTimeStamp(floor, btn)
+			}
+		}
+	}
 }
 
 func checkTimeStamps(handleOrderAgainCh chan [2]int) {
@@ -97,7 +105,6 @@ func checkTimeStamps(handleOrderAgainCh chan [2]int) {
 }
 
 func check_elevsIdleAtFloor() {
-	time.Sleep(500 * time.Millisecond)
 	if isMaster {
 		for _, elev := range elevators_online {
 			if elev.Behaviour == Elev_control.EB_Idle || elev.Behaviour == Elev_control.EB_DoorOpen {

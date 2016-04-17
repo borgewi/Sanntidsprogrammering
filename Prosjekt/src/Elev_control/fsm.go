@@ -2,12 +2,10 @@ package Elev_control
 
 import (
 	"Driver"
-	"fmt"
+	//"fmt"
 	"time"
-	//"encoding/json"
 )
 
-//Gjøre om denne til å styres av interne kommandoer OG når all_btn_calls mottas.
 func setAllLights() {
 	for floor := 0; floor < Driver.NUMFLOORS; floor++ {
 		for btn := 0; btn < Driver.NUMBUTTONS; btn++ {
@@ -53,10 +51,8 @@ func fsm_onRequestButtonPress(btn_floor int, btn_type Button, sendBtnCallCh chan
 }
 
 func fsm_onNewActiveRequest(btn_floor int, btn_type Button) {
-	fmt.Println("\nKommer inn i fsm_onani\nFloor: ", btn_floor, " Button: ", btn_type)
 	switch elevator.Behaviour {
 	case EB_DoorOpen:
-		fmt.Println("EB_DoorOpen")
 		if elevator.Floor == btn_floor {
 			timer_start(3000 * time.Millisecond)
 		} else {
@@ -68,13 +64,11 @@ func fsm_onNewActiveRequest(btn_floor int, btn_type Button) {
 		break
 	case EB_Idle:
 		elevator.Requests[btn_floor][btn_type] = true
-		//fmt.Println("Kjører requests_chooseDirection")
 		elevator.Dir = requests_chooseDirection(elevator)
-		//fmt.Println("Kommer ut av requests_chooseDirection")
 		if elevator.Dir == D_Idle {
 			Driver.ElevSetDoorLight(true)
 			elevator = requests_clearAtCurrentFloor(elevator)
-			//timer_start(3000 * time.Millisecond)
+			timer_start(3000 * time.Millisecond)
 			elevator.Behaviour = EB_DoorOpen
 		} else {
 			Driver.ElevSetMotorDirection(int(elevator.Dir))
@@ -84,7 +78,6 @@ func fsm_onNewActiveRequest(btn_floor int, btn_type Button) {
 		break
 	}
 	setAllLights()
-	fmt.Println("Kommer ut av fsm_onani")
 }
 
 func fsm_SendNewOrderToMaster(btn_floor int, btn_type Button, sendBtnCallCh chan [2]int) {
@@ -95,13 +88,8 @@ func fsm_SendNewOrderToMaster(btn_floor int, btn_type Button, sendBtnCallCh chan
 }
 
 func Fsm_addOrder(Order [2]int, Order_ID int64) {
-
 	if Order_ID == elevator.Elev_ID {
 		fsm_onNewActiveRequest(Order[0], Button(Order[1]))
-		fmt.Println("")
-		fmt.Println(" Mottat ordre og kjører fsm_onNewActiveRequest")
-	} else {
-		fmt.Println("Feil Order_ID")
 	}
 }
 
