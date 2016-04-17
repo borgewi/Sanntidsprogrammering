@@ -68,7 +68,7 @@ func requests_chooseDirection(e Elevator) Direction {
 		} else {
 			return D_Idle
 		}
-	case D_Idle: // there should only be one request in this case. Checking up or down first is arbitrary.
+	case D_Idle: 
 		if requests_above(e) {
 			return D_Up
 		} else if requests_below(e) {

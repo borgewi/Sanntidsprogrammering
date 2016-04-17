@@ -30,22 +30,17 @@ func Run_MasterSlave_Logic(localStatusCh chan Elev_control.Elevator, sendBtnCall
 	for {
 		select {
 		case call = <-receiveBtnCallCh:
-			fmt.Println("Kommer til receiveBtnCallCh")
 			if update_btnCalls(call) {
-				fmt.Println("UPDATEBTNCALLS ")
 				temp_Elevators_online := getElevators_Online()
 				index_elev := cost_function(call[0], Elev_control.Button(call[1]), temp_Elevators_online)
 				if index_elev == -1 {
-					fmt.Println("Sender inn 2 i errorCh")
 					errorCh <- Elev_control.ERR_NO_ELEVS_OPERABLE
 					break
 				}
 				elev_ID := temp_Elevators_online[index_elev].Elev_ID
-				fmt.Println("Oppdrag gis til Elev_ID: ", elev_ID)
 				Network.MH_send_new_order(elev_ID, call, sendOrderCh)
 			}
 		case call = <-handleOrderAgainCh:
-			fmt.Println("Kommer til handleOrderAgainCh")
 			temp_Elevators_online := getElevators_Online()
 			index_elev := cost_function(call[0], Elev_control.Button(call[1]), temp_Elevators_online)
 			if index_elev == -1 {
@@ -56,9 +51,7 @@ func Run_MasterSlave_Logic(localStatusCh chan Elev_control.Elevator, sendBtnCall
 			fmt.Printf("%+v", elev_ID)
 			Network.MH_send_new_order(elev_ID, call, sendOrderCh)
 		case allCalls := <-receiveAllBtnCallsCh:
-			//fmt.Println("Kommer inn i receiveAllBtnCallsCh")
 			setAll_btn_calls(allCalls)
-			fmt.Printf("%+v", allCalls)
 			setLights_setExtBtnsCh <- allCalls
 		case elev := <-updateElevsCh:
 			update_All_elevs(elev)

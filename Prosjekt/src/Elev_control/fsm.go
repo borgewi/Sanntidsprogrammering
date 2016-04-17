@@ -2,7 +2,6 @@ package Elev_control
 
 import (
 	"Driver"
-	//"fmt"
 	"time"
 )
 
@@ -97,7 +96,6 @@ func fsm_onFloorArrival(newFloor int) {
 	lastFloorTime = time.Now().Unix()
 	elevator.Floor = newFloor
 	Driver.ElevSetFloorIndicator(newFloor)
-	//fsm_checkExtRequestsStillActive() //Skal vi ha med denne?
 	switch elevator.Behaviour {
 	case EB_Moving:
 		if requests_shouldStop(elevator) {
@@ -143,18 +141,3 @@ func fsm_elevatorUninitialized() {
 		}
 	}
 }
-
-//Skal vi ha med denne?
-/*func fsm_checkExtRequestsStillActive() {
-	for i, k := range elevator.Requests {
-		for j, _ := range k {
-			if j != 2 && elevator.Requests[i][j] {
-				if !allExtBtns[i][j] {
-					//Bestillingen er allerede utført av noen andre
-					elevator.Requests[i][j] = false
-				}
-			}
-		}
-	}
-}
-*/

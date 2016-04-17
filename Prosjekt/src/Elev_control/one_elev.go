@@ -13,7 +13,6 @@ type Elevator struct {
 	Behaviour ElevatorBehaviour
 	Elev_ID   int64
 	Error     bool
-	//doorOpenDuration_s float
 }
 
 var (
@@ -28,10 +27,8 @@ const (
 	ERR_NO_ELEVS_OPERABLE
 )
 
-//var requests_timeStamp [4][3]int64 //Setter timeStamp når en ordre aktiveres.
 
 func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiveAllBtnCallsCh chan [Driver.NUMFLOORS][Driver.NUMBUTTONS - 1]bool, setLights_setExtBtnsCh chan [4][2]bool, errorCh chan int) {
-	//Init elev_state
 	if Driver.ElevGetFloorSensorSignal() == -1 {
 		fsm_onInitBetweenFloors()
 	}
@@ -42,14 +39,12 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiv
 	var prev_button [Driver.NUMFLOORS][Driver.NUMBUTTONS]int
 	var prev_floor int
 	prev_floor = Driver.ElevGetFloorSensorSignal()
-	go Update_ExtBtnCallsInElevControl(setLights_setExtBtnsCh) //SETTE DENNE INN I RUNNING MEN UTEN FORLØKKE INNI SEG SELV?
+	go Update_ExtBtnCallsInElevControl(setLights_setExtBtnsCh) 
 	go checkElevMoving(errorCh)
-	//go updateAllExtLights(receiveAllBtnCallsCh)
 	update_status_count := 0
 	update_lights_count := 0
 	localStatusCh <- elevator
 	for running {
-		// Request button
 		for f := 0; f < Driver.NUMFLOORS; f++ {
 			for b := 0; b < Driver.NUMBUTTONS; b++ {
 				v := Driver.ElevGetButtonSignal(b, f)
@@ -67,7 +62,6 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiv
 				prev_button[f][b] = v
 			}
 		}
-		// Floor sensor
 		f := Driver.ElevGetFloorSensorSignal()
 		if f != -1 {
 			if f != prev_floor {
@@ -76,7 +70,6 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiv
 			}
 		}
 		prev_floor = f
-		// Timer
 		if timer_timedOut() {
 			fsm_onDoorTimeout()
 			timer_stop()
@@ -90,7 +83,7 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiv
 			setLights_setExtBtnsCh <- allExtBtns
 			update_lights_count = 0
 		}
-		time.Sleep(25 * time.Millisecond) //Hardkoding
+		time.Sleep(25 * time.Millisecond) 
 		update_status_count += 1
 		update_lights_count += 1
 	}
@@ -104,7 +97,6 @@ func checkElevMoving(errorCh chan int) {
 	for {
 		time.Sleep(3 * time.Second)
 		if elevator.Behaviour == EB_Moving {
-			fmt.Println("Elevator status: ", elevator, "\n\n")
 			timeNow = time.Now().Unix()
 			if timeNow-lastFloorTime > errorTime {
 				err = ERR_MOTORSTOP
@@ -125,13 +117,3 @@ func Update_ExtBtnCallsInElevControl(setLights_setExtBtnsCh chan [4][2]bool) {
 		setAllLights()
 	}
 }
-/*
-func PrintElev(elev Elevator) {
-	fmt.Println("")
-	fmt.Println("Floor: ", elev.Floor)
-	fmt.Println("Direction: ", elev.Dir)
-	for f := 0; f < 4; f++ {
-		fmt.Printf("%+v", elev.Requests[f])
-		fmt.Println("")
-	}
-}*/

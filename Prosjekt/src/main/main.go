@@ -3,7 +3,6 @@ package main
 import (
 	"Elev_control"
 	"os/exec"
-	//"time"
 	"Driver"
 	"Master_Slave"
 	"fmt"
@@ -18,7 +17,6 @@ const (
 )
 
 func main() {
-	//go Backup()
 	Driver.ElevInit()
 	localStatusCh := make(chan Elev_control.Elevator, 10)
 	sendBtnCallCh := make(chan [NUMBUTTONS - 1]int, 10)

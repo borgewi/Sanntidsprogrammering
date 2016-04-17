@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net"
 	"strconv"
-	//"time"
 )
 
 const(
@@ -18,7 +17,7 @@ const(
 
 type UdpMessage struct {
 	Data      Elev_control.Elevator
-	Length    int //length of received data, in #bytes // N/A for sending
+	Length    int 
 	Order_ID  int64
 	Order     [2]int
 	Btn_calls [4][2]bool
@@ -44,24 +43,20 @@ func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool
 		for {
 			select {
 			case msg := <-msgFromNetwork_slave:
-				//fmt.Println("case: msgFromNetwork_slave")
 				if isMaster {
 					msgFromNetwork <- msg
 				}
 			case msg := <-msgFromNetwork_master:
-				//fmt.Println("case: msgFromNetwork_master")
 				if !isMaster {
 					msgFromNetwork <- msg
 				}
 			case msg := <-msgToNetwork:
-				//fmt.Println("case: msgToNetwork")
 				if isMaster {
 					msgToNetwork_master <- msg
 				} else {
 					msgToNetwork_slave <- msg
 				}
 			case new_peer_list := <-peerListLocalCh:
-				//fmt.Println("case: peerListLocalCh")
 				fmt.Println(new_peer_list)
 				highest_IP := my_IP
 				for _, IP := range new_peer_list {
@@ -71,14 +66,11 @@ func Init_udp(msgToNetwork, msgFromNetwork chan UdpMessage, isMasterCh chan bool
 				}
 				if my_IP == highest_IP {
 					isMaster = true
-					fmt.Println("Sedner true på isMasterCh")
 					isMasterCh <- true
 				} else {
 					isMaster = false
-					fmt.Println("Sedner false på isMasterCh")
 					isMasterCh <- false
 				}
-				//send {isMaster, peers.filter(ip)} to user
 			}
 		}
 	}()
@@ -147,7 +139,6 @@ func GetLocalIP() string {
 		return ""
 	}
 	for _, address := range addrs {
-		// check the address type and if it is not a loopback the display it
 		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 			if ipnet.IP.To4() != nil {
 				return ipnet.IP.String()
