@@ -2,6 +2,7 @@ package Master_Slave
 
 import (
 	"Elev_control"
+	"fmt"
 )
 
 //skal vi legge til current_order i elevator struct? Nei, tenker jeg.
@@ -15,6 +16,7 @@ func cost_function(btn_floor int, btn_type Elev_control.Button, elevs_online []E
 
 	for i, elev := range elevs_online {
 		if elev.Error == true {
+			fmt.Println("elev.Error er true")
 			continue
 		}
 		floors_between = 0

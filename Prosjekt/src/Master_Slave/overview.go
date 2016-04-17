@@ -49,7 +49,7 @@ func update_btnCalls(newCall [2]int) bool {
 		return false
 	}
 	all_btn_calls[newCall[0]][newCall[1]] = true
-	//setTimeStamp(newCall[0], newCall[1])
+	setTimeStamp(newCall[0], newCall[1])
 	return true
 }
 
@@ -69,19 +69,6 @@ func setAll_btn_calls(btn_calls [4][2]bool) {
 	all_btn_calls = btn_calls
 }
 
-/*func getOrSet_ElevatorsOnline() {
-	for {
-		select {
-		case <-getToUpdateCh:
-			ToUpdateCh <- elevators_online
-		case <-getToCostFunctionCh:
-			ToCostFunctionCh <- elevators_online
-		case elevators_online = <-Set_ElevatorsOnlineCh:
-			break
-		}
-	}
-}*/
-
 func setTimeStamp(btn_floor int, btn_type int) {
 	btn_calls_timeStamp[btn_floor][btn_type] = time.Now().Unix()
 	//fmt.Println("Satte timeStamp")
@@ -94,9 +81,6 @@ func checkTimeStamps(handleOrderAgainCh chan [2]int) {
 	var order [2]int
 	if isMaster {
 		timeNow = time.Now().Unix()
-		fmt.Println("")
-		//fmt.Printf("%+v", btn_calls_timeStamp)
-		//fmt.Println("")
 		for i, k := range btn_calls_timeStamp {
 			for j, timeStamp := range k {
 				if timeStamp != 0 {
@@ -115,7 +99,6 @@ func checkTimeStamps(handleOrderAgainCh chan [2]int) {
 func check_elevsIdleAtFloor() {
 	time.Sleep(500 * time.Millisecond)
 	if isMaster {
-		//Fuckit.Lock()
 		for _, elev := range elevators_online {
 			if elev.Behaviour == Elev_control.EB_Idle || elev.Behaviour == Elev_control.EB_DoorOpen {
 				all_btn_calls[elev.Floor][Elev_control.B_HallDown] = false
@@ -124,6 +107,5 @@ func check_elevsIdleAtFloor() {
 				btn_calls_timeStamp[elev.Floor][Elev_control.B_HallUp] = 0
 			}
 		}
-		//Fuckit.Unlock()
 	}
 }

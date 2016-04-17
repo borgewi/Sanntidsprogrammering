@@ -11,6 +11,8 @@ import (
 var isMaster bool
 
 func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallCh chan [2]int, receiveAllBtnCallsCh, setLights_setExtBtnsCh chan [4][2]bool, errorCh chan int) {
+	isMaster = true
+	Network.MH_UpdateMasterStatus(isMaster)
 	master_elev := <-localStatusCh
 	update_Elevators_online(master_elev)
 	msgToNetwork := make(chan Network.UdpMessage, 100)
@@ -23,11 +25,7 @@ func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallCh chan [2]in
 	Network.Init_udp(msgToNetwork, msgFromNetwork, isMasterCh)
 	go Network.MH_HandleIncomingMsg(msgFromNetwork, updateElevsCh, receiveBtnCallCh, receiveAllBtnCallsCh)
 	go Network.MH_HandleOutgoingMsg(msgToNetwork, updateElevsCh, sendOrderCh, localStatusCh, sendBtnCallCh, receiveBtnCallCh)
-	go checkForError(errorCh)
-	isMaster = true
 	var call [2]int
-
-	Network.MH_UpdateMasterStatus(isMaster)
 	for {
 		select {
 		case call = <-receiveBtnCallCh:
@@ -36,7 +34,8 @@ func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallCh chan [2]in
 				fmt.Println("UPDATEBTNCALLS ")
 				temp_Elevators_online := getElevators_Online()
 				index_elev := cost_function(call[0], Elev_control.Button(call[1]), temp_Elevators_online)
-				if index_elev == -1{
+				if index_elev == -1 {
+					fmt.Println("Sender inn 2 i errorCh")
 					errorCh <- Elev_control.ERR_NO_ELEVS_OPERABLE
 					break
 				}
@@ -50,7 +49,7 @@ func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallCh chan [2]in
 			fmt.Println("Kommer til handleOrderAgainCh")
 			temp_Elevators_online := getElevators_Online()
 			index_elev := cost_function(call[0], Elev_control.Button(call[1]), temp_Elevators_online)
-			if index_elev == -1{
+			if index_elev == -1 {
 				errorCh <- Elev_control.ERR_NO_ELEVS_OPERABLE
 				break
 			}
@@ -93,6 +92,7 @@ func Princess(localStatusCh chan Elev_control.Elevator, sendBtnCallCh chan [2]in
 
 func runCost_AllUnfinishedOrders(handleOrderAgainCh chan [2]int) {
 	var oldOrder [2]int
+	time.Sleep(1 * time.Second)
 	for i, k := range all_btn_calls {
 		for j, call := range k {
 			//fmt.Println(i, j, call)

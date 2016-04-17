@@ -23,7 +23,7 @@ var (
 )
 
 const (
-	ERR_NO_ERROR = 0+iota
+	ERR_NO_ERROR = 0 + iota
 	ERR_MOTORSTOP
 	ERR_NO_ELEVS_OPERABLE
 )
@@ -83,9 +83,10 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiv
 			timer_stop()
 			localStatusCh <- elevator
 		}
-		if update_status_count == 100 { //HVA ER GREIA MED DENNE? GJØRE DEN KORTERE?
+		if update_status_count == 10 {
 			localStatusCh <- elevator
-			//setLights_setExtBtnsCh <- allExtBtns
+		}
+		if update_status_count == 100 {
 			update_status_count = 0
 		}
 		if update_lights_count == 10 {
@@ -101,7 +102,7 @@ func Run_Elevator(localStatusCh chan Elevator, sendBtnCallCh chan [2]int, receiv
 func checkElevMoving(errorCh chan int) {
 	var errorTime int64
 	var timeNow int64
-	errorTime = 8
+	errorTime = 5
 	var err int
 	for {
 		time.Sleep(3 * time.Second)
